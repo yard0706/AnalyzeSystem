@@ -1,5 +1,6 @@
 package ru.vrn.rt.analyzesystem.poller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,8 @@ import org.springframework.integration.file.filters.FileListFilter;
 import org.springframework.integration.file.filters.RegexPatternFileListFilter;
 import org.springframework.integration.file.filters.SimplePatternFileListFilter;
 import ru.vrn.rt.analyzesystem.parser.ParserFactory;
+import ru.vrn.rt.analyzesystem.persistence.entity.FileRecord;
+import ru.vrn.rt.analyzesystem.persistence.service.FileRecordService;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,13 +26,15 @@ import java.time.LocalDateTime;
 @Configuration
 public class FilePollerConfig {
 
+    @Autowired
+    private FileRecordService fileService;
+
     @Value("${input.folder}")
     private String inputFolder;
 
     @Value("${work.folder}")
     private String workFolder;
 
-    private ParserFactory parserFactory = new ParserFactory();
 
     @Bean
     @InboundChannelAdapter(value = "fileInputChannel", poller = @Poller(fixedDelay = "1000"))
@@ -55,6 +60,11 @@ public class FilePollerConfig {
                 Files.createDirectory(targetDir);
 
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+                FileRecord fileRecord = new FileRecord();
+                fileRecord.setFileName(target.getFileName().toString());
+                fileRecord.setFilePath(target.toAbsolutePath().toString());
+                fileRecord.setLoadTime(LocalDateTime.now());
+            fileService.createFileRecord(fileRecord);
 
         } catch (IOException e) {
             e.printStackTrace();
