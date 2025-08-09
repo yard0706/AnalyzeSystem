@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 
 @Configuration
 public class FilePollerConfig {
+
     @Value("${input.folder}")
     private String inputFolder;
 
