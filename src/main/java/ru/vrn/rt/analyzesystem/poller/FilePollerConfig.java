@@ -1,19 +1,15 @@
 package ru.vrn.rt.analyzesystem.poller;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.Poller;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.file.FileReadingMessageSource;
-import org.springframework.integration.file.filters.CompositeFileListFilter;
-import org.springframework.integration.file.filters.FileListFilter;
 import org.springframework.integration.file.filters.RegexPatternFileListFilter;
-import org.springframework.integration.file.filters.SimplePatternFileListFilter;
-import ru.vrn.rt.analyzesystem.parser.ParserFactory;
 import ru.vrn.rt.analyzesystem.persistence.entity.FileRecord;
 import ru.vrn.rt.analyzesystem.persistence.service.FileRecordService;
 
@@ -21,6 +17,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @Configuration
@@ -58,6 +56,8 @@ public class FilePollerConfig {
             // Ensure target directory exists
             if (!Files.exists(targetDir))
                 Files.createDirectory(targetDir);
+            //rename file name if duplicate
+            target = renameExistFile(target, targetDir, source);
 
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
                 FileRecord fileRecord = new FileRecord();
@@ -70,4 +70,27 @@ public class FilePollerConfig {
             e.printStackTrace();
         }
     }
+
+    private Path renameExistFile(Path target, Path targetDir, Path source) {
+        if(Files.exists(target)) {
+            target = targetDir.resolve(Paths.get(renameFileDuplicate(source.getFileName().toString())));
+            return renameExistFile(target, targetDir, target);
+        } else
+            return target;
+    }
+
+    private String renameFileDuplicate(String name) {
+        String regex = "(.*)\\((\\d+)\\)\\.(.*)";
+        Matcher matcher= Pattern.compile(regex).matcher(name.trim());
+        String newName = name;
+        if (matcher.find()) {
+            int newNumber = Integer.parseInt(matcher.group(2)) + 1;
+            newName = name.trim().replaceAll(regex, "$1("+newNumber+").$3");
+        }
+        else
+            newName = StringUtils.substringBeforeLast(name,".")+" (1)."+StringUtils.substringAfterLast(name,".");
+        return newName;
+    }
+
 }
+
