@@ -1,0 +1,8 @@
+docker run --name scylla -d \
+    --publish 9042:9042 \
+    --publish 7000:7000 \
+    --publish 7001:7001 \
+    --publish 9160:9160 \
+    --volume /home/user/IdeaProjects/analyzesystem/analyzesystem/database:/var/lib/scylla scylladb/scylla:latest
+
+ docker exec -it scylla cqlsh

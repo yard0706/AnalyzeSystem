@@ -10,33 +10,39 @@
 <h:head>
     <title>.:: JoinFaces Example ::.</title>
     <meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
+    <h:outputStylesheet library="css" name="layout.css" />
+    <h:outputScript library="js" name="layout.js" />
 </h:head>
 
 <h:body>
-    <pe:layout fullPage="true" >
-        <pe:layoutPane id="mainLayoutPane" position="center">
-            <h:form id="contentForm" prependId="false" enctype="multipart/form-data">
-                <p:ajaxStatus onstart="PF('statusDialog').show();"
-                              onsuccess="PF('statusDialog').hide();" />
-                <p:dialog widgetVar="statusDialog" position="right top"
-                          draggable="false" resizable="false" closable="false"
-                          showHeader="false" modal="false">
-                </p:dialog>
-                <div id="mainDiv" class="ui-fluid center">
-                    <p:menubar>
-                        <p:menuitem id="starterMenuItem" value="Starter" url="/starter.faces" />
-                        <p:menuitem id="fileUploadMenuItem" value="File Upload" url="fileUpload.faces" />
-                        <p:menuitem id="customInputMenuItem" value="Custom Input" url="customInput.faces" />
-                        <p:menuitem id="myTagMenuItem" value="My Tag" url="helloTag.faces" />
-                        <p:menuitem id="hiCCMenuItem" value="Hi CC" url="hiCC.faces" />
-                        <p:menuitem id="welcomeConverterMenuItem" value="Welcome Converter" url="welcomeConverter.faces" />
-                    </p:menubar>
+    <div class="container">
+        <header class="header">
+            <h1>Мой сайт</h1>
+            <button id="toggleSidebar" class="toggle-btn">☰</button>
+        </header>
 
-                    <p:spacer height="10" />
+        <div class="main-content">
+            <aside class="sidebar" id="sidebar">
+                <nav>
+                    <ul>
+                        <li><a href="#">Главная</a></li>
+                        <li><a href="#">О нас</a></li>
+                        <li><a href="#">Услуги</a></li>
+                        <li><a href="#">Контакты</a></li>
+                    </ul>
+                </nav>
+            </aside>
 
-                </div>
-            </h:form>
-        </pe:layoutPane>
-    </pe:layout>
+            <main class="content">
+                <h2>Основное содержимое</h2>
+                <p>Здесь находится основной контент вашей страницы.</p>
+                <p>Нажмите кнопку в шапке, чтобы скрыть/показать боковую панель.</p>
+            </main>
+        </div>
+
+        <footer class="footer">
+            <p>© 2023 Мой сайт. Все права защищены.</p>
+        </footer>
+    </div>
 </h:body>
 </html>

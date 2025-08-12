@@ -72,6 +72,7 @@ public class FilePollerConfig {
     }
 
     private Path renameExistFile(Path target, Path targetDir, Path source) {
+        //off course recursive
         if(Files.exists(target)) {
             target = targetDir.resolve(Paths.get(renameFileDuplicate(source.getFileName().toString())));
             return renameExistFile(target, targetDir, target);
