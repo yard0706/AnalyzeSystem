@@ -51,7 +51,7 @@ body {
 }
 
 .sidebar nav a {
-  color: white;
+  color: red;
   text-decoration: none;
   display: block;
   padding: 0.5rem 0;
@@ -65,13 +65,14 @@ body {
   flex: 1;
   padding: 1rem;
   background: #ecf0f1;
+  color: darkgrey;
 }
 
 .footer {
   background: #2c3e50;
-  color: white;
+  color: darkyelloy;
   text-align: center;
-  padding: 1rem;
+  padding: 0;
 }
 
 /* Класс для скрытой панели */

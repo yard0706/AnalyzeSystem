@@ -16,7 +16,9 @@ import ru.vrn.rt.analyzesystem.persistence.service.FileRecordService;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,13 +46,17 @@ public class FilePollerConfig {
         return source;
     }
 
+    public static void main(String[] args) {
+        System.out.println(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+    }
+
     @ServiceActivator(inputChannel = "fileInputChannel")
     public void ProcessFile(File file) {
         try {
             System.out.println("move:"+file.getAbsoluteFile());
             //move file to work directory
             Path source = Paths.get(file.getAbsolutePath());
-            Path targetDir = Paths.get(workFolder);
+            Path targetDir = Paths.get(workFolder+File.separator+ LocalDate.now().format(DateTimeFormatter.ISO_DATE));
             Path target = targetDir.resolve(source.getFileName());
 
             // Ensure target directory exists

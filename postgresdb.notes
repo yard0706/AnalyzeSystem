@@ -1,0 +1,9 @@
+ docker run --name postgres -e \
+    POSTGRES_PASSWORD=verystrongpgpassword \
+    -p 5432:5432 \
+    -v /home/user/postgresdb:/var/lib/postgresql/data \
+    -d postgres
+
+
+    docker start postgres
+
