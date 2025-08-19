@@ -38,10 +38,6 @@ public class FilesMBean {
                 ); return f;})
                 .collect(Collectors.toList());
 
-        for(FileRecordViewDTO f:resultList) {
-            System.out.println("-=> "+f);
-        }
-
         filesList = resultList;
     }
 
