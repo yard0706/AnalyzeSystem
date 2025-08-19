@@ -42,7 +42,7 @@ body {
   width: 250px;
   background: #34495e;
   color: white;
-  padding: 1rem;
+  padding: 0;
   transition: transform 0.3s ease;
 }
 

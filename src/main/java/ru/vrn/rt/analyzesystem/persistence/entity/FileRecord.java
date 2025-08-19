@@ -18,6 +18,16 @@ public class FileRecord {
 
     private LocalDateTime loadTime;
 
+    @Override
+    public String toString() {
+        return "FileRecord{" +
+                "id=" + id +
+                ", fileName='" + fileName + '\'' +
+                ", filePath='" + filePath + '\'' +
+                ", loadTime=" + loadTime +
+                '}';
+    }
+
     public Long getId() {
         return id;
     }

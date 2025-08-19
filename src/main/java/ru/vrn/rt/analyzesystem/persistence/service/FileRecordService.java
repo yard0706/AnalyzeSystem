@@ -17,7 +17,7 @@ public class FileRecordService {
     }
 
     public List<FileRecord> getAllFiles() {
-        return repository.findAll();
+        return repository.findTop500ByOrderByLoadTimeDesc();
     }
 
     public FileRecord createFileRecord(FileRecord file) {

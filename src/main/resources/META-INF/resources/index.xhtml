@@ -3,6 +3,7 @@
 <html lang="en-us"
 
       xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
       xmlns:p="http://primefaces.org/ui"
       xmlns:pe="http://primefaces.org/ui/extensions"
       xmlns:ui="jakarta.faces.facelets">
@@ -11,6 +12,7 @@
     <title>.:: JoinFaces Example ::.</title>
     <meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
     <h:outputStylesheet library="css" name="layout.css" />
+    <h:outputStylesheet library="css" name="no-header-table.css" />
     <h:outputStylesheet library="webjars" name="primeflex/3.3.1/primeflex.min.css" />
     <h:outputScript library="js" name="layout.js" />
 </h:head>
@@ -24,14 +26,35 @@
 
         <div class="main-content">
             <aside class="sidebar" id="sidebar">
-                <nav>
-                    <ul>
-                        <li><a href="#">Главная</a></li>
-                        <li><a href="#">О нас</a></li>
-                        <li><a href="#">Услуги</a></li>
-                        <li><a href="#">Контакты</a></li>
-                    </ul>
-                </nav>
+                <h:form>
+                    <p:dataTable var="file" value="#{filesMBean.filesList}"
+                                 sortBy="#{file.groupName}" sortOrder="desc"
+                                 size="small" styleClass="hide-datatable-header">
+                        <p:headerRow field="groupName"
+                                     expandable="true"
+                                     sortOrder="desc"
+                                     expanded="true">
+
+                            <p:column colspan="2">
+                                <div class="inline-flex align-items-center" style="vertical-align: middle">
+                                    <h:outputText styleClass="ml-2" value="#{file.groupName}"/>
+                                </div>
+                            </p:column>
+                        </p:headerRow>
+
+                        <p:column>
+                            <h:outputText value="#{file.fileName}" />
+                        </p:column>
+
+
+                        <p:column>
+                            <h:outputText value="#{file.loadTime}">
+                                <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss" type="localDateTime"/>
+                            </h:outputText>
+                        </p:column>
+
+                    </p:dataTable>
+                </h:form>
             </aside>
 
             <main class="content">
