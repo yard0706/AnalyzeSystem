@@ -50,8 +50,14 @@
                         </p:headerRow>
 
                         <p:column>
-                            <div onclick="$(this).closest('td').click()" class="ui-datatable-selectable">
+                            <div onclick="$(this).closest('td').click()" class="block font-bold text-left p-0">
                                 <h:outputText value="#{file.fileName}" />
+                            </div>
+                            <div onclick="$(this).closest('td').click()" class="block text-right p-0 text-xs text-gray-400">
+                                Загружен:
+                                <h:outputText value="#{file.loadTime}">
+                                    <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss" type="localDateTime"/>
+                                </h:outputText>
                             </div>
                         </p:column>
 
