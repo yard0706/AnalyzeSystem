@@ -9,7 +9,7 @@
       xmlns:ui="jakarta.faces.facelets">
 
 <h:head>
-    <title>.:: JoinFaces Example ::.</title>
+    <title>.:: AS ::.</title>
     <meta content='text/html; charset=UTF-8' http-equiv="Content-Type" />
     <h:outputStylesheet library="css" name="layout.css" />
     <h:outputStylesheet library="css" name="no-header-table.css" />
@@ -20,22 +20,29 @@
 <h:body>
     <div class="container">
         <header class="header">
-            <h1>Мой сайт</h1>
+            <h1>...</h1>
             <button id="toggleSidebar" class="toggle-btn">☰</button>
         </header>
 
         <div class="main-content">
             <aside class="sidebar" id="sidebar">
-                <h:form>
-                    <p:dataTable var="file" value="#{filesMBean.filesList}"
+                <h:form id="sidebarForm">
+                    <p:growl id="msgs" showDetail="true" skipDetailIfEqualsSummary="true"/>
+                    <p:dataTable id="filesTable" var="file" value="#{filesMBean.filesList}"
                                  sortBy="#{file.groupName}" sortOrder="desc"
-                                 size="small" styleClass="hide-datatable-header">
+                                 size="small" styleClass="hide-datatable-header"
+                                 selectionMode="single"
+                                 selection="#{filesMBean.selectedFile}" rowKey="#{file.id}"
+                                 widgetVar="filesTableWidget"
+                                 rowIndexVar="rowIndex">
+                        <p:ajax event="rowSelect" listener="#{filesMBean.onRowSelect}" update=":sidebarForm:msgs"/>
+
                         <p:headerRow field="groupName"
                                      expandable="true"
                                      sortOrder="desc"
                                      expanded="true">
 
-                            <p:column colspan="1">
+                            <p:column colspan="1" style="background-color: sienna;">
                                 <div class="inline-flex align-items-center" style="vertical-align: middle">
                                     <h:outputText styleClass="ml-2" value="#{file.groupName}"/>
                                 </div>
@@ -43,18 +50,13 @@
                         </p:headerRow>
 
                         <p:column>
-                            <div class="block font-bold text-left p-0">
+                            <div onclick="$(this).closest('td').click()" class="ui-datatable-selectable">
                                 <h:outputText value="#{file.fileName}" />
-                            </div>
-                            <div class="block text-right p-0 text-xs text-gray-400">
-                                Загружен:
-                                <h:outputText value="#{file.loadTime}">
-                                    <f:convertDateTime pattern="dd.MM.yyyy HH:mm:ss" type="localDateTime"/>
-                                </h:outputText>
                             </div>
                         </p:column>
 
                     </p:dataTable>
+
                 </h:form>
             </aside>
 
