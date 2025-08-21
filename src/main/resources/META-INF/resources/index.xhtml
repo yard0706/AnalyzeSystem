@@ -35,7 +35,7 @@
                                  selection="#{filesMBean.selectedFile}" rowKey="#{file.id}"
                                  widgetVar="filesTableWidget"
                                  rowIndexVar="rowIndex">
-                        <p:ajax event="rowSelect" listener="#{filesMBean.onRowSelect}" update=":sidebarForm:msgs"/>
+                        <p:ajax event="rowSelect" listener="#{filesMBean.onRowSelect}" update=":sidebarForm:msgs :contentForm"/>
 
                         <p:headerRow field="groupName"
                                      expandable="true"
@@ -60,16 +60,23 @@
                                 </h:outputText>
                             </div>
                         </p:column>
-
                     </p:dataTable>
 
                 </h:form>
             </aside>
 
             <main class="content">
-                <div class="block bg-primary font-bold text-center p-4 border-round mb-3">1</div>
-                <div class="block bg-primary font-bold text-center p-4 border-round mb-3">2</div>
-                <div class="block bg-primary font-bold text-center p-4 border-round mb-3">3</div>
+                <h:form id="contentForm">
+                    <div class="block bg-primary font-bold text-center p-4 border-round mb-3" style="height: 400px;">
+                        <p:inputTextarea
+                                value="#{filesMBean.selectedFilePreview}"
+                                style="width: 100%; height: 100%;
+                                       white-space: nowrap;
+                                       box-sizing: border-box;
+                                       overflow-x: auto;"
+                                autoResize="false"/>
+                    </div>
+                </h:form>
             </main>
         </div>
 

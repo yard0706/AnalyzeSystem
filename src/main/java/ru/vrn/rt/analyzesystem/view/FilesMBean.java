@@ -10,10 +10,13 @@ import org.primefaces.event.SelectEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ru.vrn.rt.analyzesystem.filereader.FileReaderFactory;
+import ru.vrn.rt.analyzesystem.filereader.FilesReader;
 import ru.vrn.rt.analyzesystem.persistence.entity.FileRecord;
 import ru.vrn.rt.analyzesystem.persistence.service.FileRecordService;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +32,7 @@ public class FilesMBean {
 
     private List<FileRecordViewDTO> filesList = new ArrayList<>();
     private FileRecordViewDTO selectedFile;
+    private String selectedFilePreview = "test text";
 
     private void updateFilesList() {
         ModelMapper modelMapper = new ModelMapper();
@@ -55,6 +59,19 @@ public class FilesMBean {
         System.out.println("-=> "+String.valueOf(event.getObject().getFileName()));
         FacesMessage msg = new FacesMessage("File Selected", String.valueOf(event.getObject().getFileName()));
         FacesContext.getCurrentInstance().addMessage(null, msg);
+
+        File fileObj = new File(selectedFile.getFilePath());
+        if (fileObj.exists()) {
+            FilesReader reader = FileReaderFactory.getReader(selectedFile.getFilePath());
+            try {
+                selectedFilePreview = reader.readFirstLines(selectedFile.getFilePath(), 10);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            System.out.println("Файл " + selectedFile.getFilePath() + " не найден");
+        }
+
     }
 
     public List<FileRecordViewDTO> getFilesList() {
@@ -71,5 +88,13 @@ public class FilesMBean {
 
     public void setSelectedFile(FileRecordViewDTO selectedFile) {
         this.selectedFile = selectedFile;
+    }
+
+    public String getSelectedFilePreview() {
+        return selectedFilePreview;
+    }
+
+    public void setSelectedFilePreview(String selectedFilePreview) {
+        this.selectedFilePreview = selectedFilePreview;
     }
 }
