@@ -1,6 +1,8 @@
 package ru.vrn.rt.analyzesystem.view;
 
 import jakarta.faces.view.ViewScoped;
+import org.primefaces.PrimeFaces;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.vrn.rt.analyzesystem.filereader.csv.CsvDataExtractor;
 import ru.vrn.rt.analyzesystem.view.model.ColumnModel;
@@ -16,8 +18,12 @@ public class DataViewBean {
     private List<ColumnModel> columns;
     private List<String[]> records;
 
-    public void init(String filePath, Character csvSeparator ) {
-        CsvDataExtractor csvDataExtractor = new CsvDataExtractor(filePath, csvSeparator);
+    private String filePath;
+    private String separatorChar;
+
+    public void init() {
+
+        CsvDataExtractor csvDataExtractor = new CsvDataExtractor(filePath, separatorChar.charAt(0));
         columns = new ArrayList<>();
         for(String cKey:csvDataExtractor.getColumnsMap().keySet()) {
             columns.add( new ColumnModel(cKey,csvDataExtractor.getColumnsMap().get(cKey)) );
@@ -39,5 +45,21 @@ public class DataViewBean {
 
     public void setRecords(List<String[]> records) {
         this.records = records;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public String getSeparatorChar() {
+        return separatorChar;
+    }
+
+    public void setSeparatorChar(String separatorChar) {
+        this.separatorChar = separatorChar;
     }
 }

@@ -67,6 +67,19 @@
 
             <main class="content">
                 <h:form id="contentForm">
+                    <p:toolbar>
+                        <p:toolbarGroup>
+                            <h:outputText value="Разделитель:"/>
+                            <p:selectOneButton value="#{filesMBean.separatorChar}" style="margin-left: 10px;">
+                                <f:selectItem itemLabel="," itemValue=","/>
+                                <f:selectItem itemLabel=";" itemValue=";"/>
+                                <f:selectItem itemLabel="|" itemValue="|"/>
+                                <p:ajax event="change" listener="#{filesMBean.onChangeSeparator}" />
+                            </p:selectOneButton>
+                        </p:toolbarGroup>
+
+                    </p:toolbar>
+
                     <div class="block bg-primary font-bold text-center p-4 border-round mb-3" style="height: 400px;">
                         <p:inputTextarea
                                 value="#{filesMBean.selectedFilePreview}"

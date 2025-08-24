@@ -31,6 +31,7 @@ public class FilesMBean {
     private DataViewBean dataViewBean;
     @Value("${work.folder}")
     private String workFolder;
+    private String separatorChar = ",";
 
 
     private List<FileRecordViewDTO> filesList = new ArrayList<>();
@@ -73,8 +74,19 @@ public class FilesMBean {
             System.out.println("Файл " + selectedFile.getFilePath() + " не найден");
         }
 
-        dataViewBean.init(selectedFile.getFilePath(), ',');
+        dataViewBean.setFilePath(selectedFile.getFilePath());
+        dataViewBean.setSeparatorChar(separatorChar);
+        dataViewBean.init();
+        PrimeFaces.current().ajax().update(":contentForm:fileDataTable");
+    }
 
+    public void onChangeSeparator() {
+        System.out.println("onChangeSeparator method start");
+        if(selectedFile == null) return;
+        System.out.println("onChangeSeparator selected file not null");
+        dataViewBean.setFilePath(selectedFile.getFilePath());
+        dataViewBean.setSeparatorChar(separatorChar);
+        dataViewBean.init();
         PrimeFaces.current().ajax().update(":contentForm:fileDataTable");
     }
 
@@ -100,5 +112,13 @@ public class FilesMBean {
 
     public void setSelectedFilePreview(String selectedFilePreview) {
         this.selectedFilePreview = selectedFilePreview;
+    }
+
+    public String getSeparatorChar() {
+        return separatorChar;
+    }
+
+    public void setSeparatorChar(String separatorChar) {
+        this.separatorChar = separatorChar;
     }
 }
