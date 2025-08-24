@@ -1,4 +1,4 @@
-package ru.vrn.rt.analyzesystem.view;
+package ru.vrn.rt.analyzesystem.view.dto;
 
 import ru.vrn.rt.analyzesystem.persistence.entity.FileRecord;
 

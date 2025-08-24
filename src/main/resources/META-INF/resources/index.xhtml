@@ -76,6 +76,15 @@
                                        overflow-x: auto;"
                                 autoResize="false"/>
                     </div>
+
+                    <p:dataTable id="fileDataTable" var="data" value="#{dataViewBean.records}" widgetVar="fileDataWidget" size="small">
+
+                        <p:columns value="#{dataViewBean.columns}" var="column" headerText="#{column.columnName}" autoResize="true  ">
+                            <h:outputText value="#{data[column.keyColumn]}"/>
+                        </p:columns>
+
+                    </p:dataTable>
+
                 </h:form>
             </main>
         </div>

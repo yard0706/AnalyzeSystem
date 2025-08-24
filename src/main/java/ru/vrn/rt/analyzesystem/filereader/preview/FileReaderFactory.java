@@ -1,4 +1,4 @@
-package ru.vrn.rt.analyzesystem.filereader;
+package ru.vrn.rt.analyzesystem.filereader.preview;
 
 public class FileReaderFactory {
     public static FilesReader getReader(String filePath) {

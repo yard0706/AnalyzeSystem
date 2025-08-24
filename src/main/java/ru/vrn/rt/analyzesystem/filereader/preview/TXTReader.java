@@ -1,13 +1,13 @@
-package ru.vrn.rt.analyzesystem.filereader;
+package ru.vrn.rt.analyzesystem.filereader.preview;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.FileReader;
+import java.io.IOException;
 
-public class CSVReader implements FilesReader {
+public class TXTReader implements FilesReader {
     @Override
     public String readFirstLines(String filePath, int lines) throws IOException {
-        System.out.println("=== Первые " + lines + " строк из CSV файла: " + filePath + " ===");
+        System.out.println("=== Первые " + lines + " строк из TXT файла: " + filePath + " ===");
         StringBuilder sbResult = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;

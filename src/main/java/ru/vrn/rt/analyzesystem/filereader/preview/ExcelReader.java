@@ -1,4 +1,4 @@
-package ru.vrn.rt.analyzesystem.filereader;
+package ru.vrn.rt.analyzesystem.filereader.preview;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -6,9 +6,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 
 public class ExcelReader implements FilesReader{
