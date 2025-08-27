@@ -74,7 +74,14 @@
                                 <f:selectItem itemLabel="," itemValue=","/>
                                 <f:selectItem itemLabel=";" itemValue=";"/>
                                 <f:selectItem itemLabel="|" itemValue="|"/>
-                                <p:ajax event="change" listener="#{filesMBean.onChangeSeparator}" />
+                                <p:ajax event="change" listener="#{filesMBean.onChangeParams}" />
+                            </p:selectOneButton>
+
+                            <h:outputText value="Кодировка:" style="margin-left: 20px;"/>
+                            <p:selectOneButton value="#{filesMBean.encoding}" style="margin-left: 10px;">
+                                <f:selectItem itemLabel="UTF-8" itemValue="UTF-8"/>
+                                <f:selectItem itemLabel="CP1251" itemValue="CP1251"/>
+                                <p:ajax event="change" listener="#{filesMBean.onChangeParams}" />
                             </p:selectOneButton>
                         </p:toolbarGroup>
 

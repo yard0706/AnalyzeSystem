@@ -31,7 +31,10 @@ public class FilesMBean {
     private DataViewBean dataViewBean;
     @Value("${work.folder}")
     private String workFolder;
-    private String separatorChar = ",";
+    @Value("${default.csv.separator}")
+    private String separatorChar;
+    @Value("${default.csv.encoding}")
+    private String encoding;
 
 
     private List<FileRecordViewDTO> filesList = new ArrayList<>();
@@ -80,15 +83,17 @@ public class FilesMBean {
         PrimeFaces.current().ajax().update(":contentForm:fileDataTable");
     }
 
-    public void onChangeSeparator() {
+    public void onChangeParams() {
         System.out.println("onChangeSeparator method start");
         if(selectedFile == null) return;
         System.out.println("onChangeSeparator selected file not null");
         dataViewBean.setFilePath(selectedFile.getFilePath());
         dataViewBean.setSeparatorChar(separatorChar);
+        dataViewBean.setEncoding(encoding);
         dataViewBean.init();
         PrimeFaces.current().ajax().update(":contentForm:fileDataTable");
     }
+
 
     public List<FileRecordViewDTO> getFilesList() {
         return filesList;
@@ -120,5 +125,13 @@ public class FilesMBean {
 
     public void setSeparatorChar(String separatorChar) {
         this.separatorChar = separatorChar;
+    }
+
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
     }
 }

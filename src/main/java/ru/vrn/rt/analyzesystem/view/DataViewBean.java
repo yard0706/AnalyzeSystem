@@ -20,10 +20,11 @@ public class DataViewBean {
 
     private String filePath;
     private String separatorChar;
+    private String encoding = "UTF-8";
 
     public void init() {
 
-        CsvDataExtractor csvDataExtractor = new CsvDataExtractor(filePath, separatorChar.charAt(0));
+        CsvDataExtractor csvDataExtractor = new CsvDataExtractor(filePath, separatorChar.charAt(0), encoding);
         columns = new ArrayList<>();
         for(String cKey:csvDataExtractor.getColumnsMap().keySet()) {
             columns.add( new ColumnModel(cKey,csvDataExtractor.getColumnsMap().get(cKey)) );
@@ -61,5 +62,13 @@ public class DataViewBean {
 
     public void setSeparatorChar(String separatorChar) {
         this.separatorChar = separatorChar;
+    }
+
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
     }
 }

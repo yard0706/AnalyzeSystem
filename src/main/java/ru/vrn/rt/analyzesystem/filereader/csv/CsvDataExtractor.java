@@ -6,18 +6,23 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvException;
 
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class CsvDataExtractor {
 
     private String filePath;
     private Character csvSeparator;
+    private String csvCharset;
 
-    public CsvDataExtractor(String filePath, Character csvSeparator) {
+    public CsvDataExtractor(String filePath, Character csvSeparator, String csvCharset) {
         this.filePath = filePath;
         this.csvSeparator = csvSeparator;
+        this.csvCharset = csvCharset;
     }
 
     public Map<String, Integer> getColumnsMap() {
@@ -26,7 +31,7 @@ public class CsvDataExtractor {
                 .withSeparator(csvSeparator)
                 .build();
 
-        try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
+        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
                 .withCSVParser(csvParser)
                 .withSkipLines(0) // пропускаем первые строки
                 .build()) {
@@ -52,7 +57,7 @@ public class CsvDataExtractor {
                 .withSeparator(csvSeparator)
                 .build();
 
-        try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
+        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
                 .withCSVParser(csvParser)
                 .withSkipLines(skipLinesAmount) // пропускаем первые строки
                 .build()) {
@@ -70,20 +75,5 @@ public class CsvDataExtractor {
         return  resultList;
     }
 
-    public static void main(String[] args) {
-        String csvFile = "/home/user/temp/work/2025-08-19/data-20181114-structure-20181114.csv";
-//        csvFile = "/home/user/temp/work/2025-08-19/lots-2025-08-19.csv";
-
-        CsvDataExtractor csvDataExtractor = new CsvDataExtractor(csvFile,',');
-        for(String c:csvDataExtractor.getColumnsMap().keySet()) {
-            System.out.println(c+" | "+csvDataExtractor.getColumnsMap().get(c));
-        }
-
-        for(String[] sarr:csvDataExtractor.readLines(1)) {
-            System.out.println(Arrays.toString(sarr));
-        }
-
-
-    }
 
 }
