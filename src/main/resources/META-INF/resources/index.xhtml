@@ -97,7 +97,8 @@
                                 autoResize="false"/>
                     </div>
 
-                    <p:dataTable id="fileDataTable" var="data" value="#{dataViewBean.records}" widgetVar="fileDataWidget" size="small">
+                    <p:dataTable id="fileDataTable" var="data" value="#{dataViewBean.records}" widgetVar="fileDataWidget"
+                                 size="small" class="text-sm">
 
                         <p:columns value="#{dataViewBean.columns}" var="column" headerText="#{column.columnName}" autoResize="true  ">
                             <h:outputText value="#{data[column.keyColumn]}"/>
