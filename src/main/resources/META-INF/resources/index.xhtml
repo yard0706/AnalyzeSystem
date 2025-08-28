@@ -69,7 +69,7 @@
                 <h:form id="contentForm">
                     <p:toolbar>
                         <p:toolbarGroup>
-                            <h:outputText value="Разделитель:"/>
+                            <h:outputText value="Разделитель:" style="margin-left: 5px;"/>
                             <p:selectOneButton value="#{filesMBean.separatorChar}" style="margin-left: 10px;">
                                 <f:selectItem itemLabel="," itemValue=","/>
                                 <f:selectItem itemLabel=";" itemValue=";"/>
@@ -83,19 +83,10 @@
                                 <f:selectItem itemLabel="CP1251" itemValue="CP1251"/>
                                 <p:ajax event="change" listener="#{filesMBean.onChangeParams}" />
                             </p:selectOneButton>
+                            <p:commandButton type="button" icon="pi pi-bars" onclick="PF('previewDialog').show()" style="margin-left: 20px;"/>
                         </p:toolbarGroup>
 
                     </p:toolbar>
-
-                    <div class="block bg-primary font-bold text-center p-4 border-round mb-3" style="height: 400px;">
-                        <p:inputTextarea
-                                value="#{filesMBean.selectedFilePreview}"
-                                style="width: 100%; height: 100%;
-                                       white-space: nowrap;
-                                       box-sizing: border-box;
-                                       overflow-x: auto;"
-                                autoResize="false"/>
-                    </div>
 
                     <p:dataTable id="fileDataTable" var="data" value="#{dataViewBean.records}" widgetVar="fileDataWidget"
                                  size="small" class="text-sm">
@@ -106,6 +97,17 @@
 
                     </p:dataTable>
 
+                    <p:dialog header="Первые 10 строк файла" widgetVar="previewDialog" minHeight="600" width="800" showEffect="fade" closeOnEscape="true">
+                        <div class="block bg-primary font-bold text-center p-0 border-round mb-3" style="height: 300px;">
+                            <p:inputTextarea
+                                    value="#{filesMBean.selectedFilePreview}"
+                                    style="width: 100%; height: 100%;
+                                       white-space: nowrap;
+                                       box-sizing: border-box;
+                                       overflow-x: auto;"
+                                    autoResize="false"/>
+                        </div>
+                    </p:dialog>
                 </h:form>
             </main>
         </div>
