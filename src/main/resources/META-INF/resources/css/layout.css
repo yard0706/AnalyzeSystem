@@ -82,7 +82,7 @@ body {
   padding: 0;
   overflow: hidden;
 }
-
+height: calc(100vh - 120px)
 .content-expanded {
   margin-left: 0;
 }
@@ -90,7 +90,7 @@ body {
 @media (max-width: 768px) {
   .sidebar {
     position: absolute;
-    height: calc(100vh - 120px);
+    ;
     z-index: 100;
   }
 

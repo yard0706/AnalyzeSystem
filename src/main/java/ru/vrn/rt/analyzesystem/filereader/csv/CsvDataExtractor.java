@@ -11,6 +11,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class CsvDataExtractor {
@@ -25,55 +26,135 @@ public class CsvDataExtractor {
         this.csvCharset = csvCharset;
     }
 
-    public Map<String, Integer> getColumnsMap() {
-        Map<String, Integer> resultMap = new LinkedHashMap<>();
-        CSVParser csvParser = new CSVParserBuilder()
-                .withSeparator(csvSeparator)
-                .build();
+//    public Map<String, Integer> getColumnsMap() {
+//        Map<String, Integer> resultMap = new LinkedHashMap<>();
+//        CSVParser csvParser = new CSVParserBuilder()
+//                .withSeparator(csvSeparator)
+//                .build();
+//
+//        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
+//                .withCSVParser(csvParser)
+//                .build()) {
+//
+//            String[] firstLine = reader.readNext();
+//            if (firstLine == null) throw new IllegalArgumentException("CSV файл пуст или не содержит данных");
+//
+//            for (int i = 0; i < firstLine.length; i++)
+//                resultMap.put(firstLine[i],i );
+//
+//        } catch (IOException | CsvException e) {
+//            throw new IllegalStateException("Ошибка при чтении CSV файла: " + filePath, e);
+//        }
+//        return resultMap;
+//    }
+public Map<String, Integer> getColumnsMap(List<Integer> selectedIndices) {
+    Map<String, Integer> resultMap = new LinkedHashMap<>();
+    CSVParser csvParser = new CSVParserBuilder()
+            .withSeparator(csvSeparator)
+            .build();
 
-        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
-                .withCSVParser(csvParser)
-                .withSkipLines(0) // пропускаем первые строки
-                .build()) {
-            // Читаем все строки
-            List<String[]> allData = reader.readAll();
+    try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
+            .withCSVParser(csvParser)
+            .build()) {
 
-            if (!allData.isEmpty()) {
-                // Первая строка обычно содержит заголовки (названия полей)
-                String[] fields = allData.get(0);
-                for (int i = 0; i < fields.length; i++)
-                    resultMap.put(fields[i],i );
+        String[] firstLine = reader.readNext();
+        if (firstLine == null) throw new IllegalArgumentException("CSV файл пуст или не содержит данных");
+
+        if (selectedIndices == null || selectedIndices.isEmpty()) {
+            for (int i = 0; i < firstLine.length; i++) {
+                resultMap.put(firstLine[i], i);
             }
-
-        } catch (IOException | CsvException e) {
-            e.printStackTrace();
+        } else {
+            for (Integer index : selectedIndices) {
+                if (index != null && index >= 0 && index < firstLine.length) {
+                    resultMap.put(firstLine[index], index);
+                }
+            }
         }
-        return resultMap;
+
+    } catch (IOException | CsvException e) {
+        throw new IllegalStateException("Ошибка при чтении CSV файла: " + filePath, e);
     }
+    return resultMap;
+}
 
     public List<String[]> readLines(Integer skipLinesAmount) {
         List<String[]> resultList = new ArrayList<>();
+        final int MAX_LINES = 100;
+
         CSVParser csvParser = new CSVParserBuilder()
                 .withSeparator(csvSeparator)
                 .build();
 
         try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
                 .withCSVParser(csvParser)
-                .withSkipLines(skipLinesAmount) // пропускаем первые строки
+                .withSkipLines(skipLinesAmount != null ? skipLinesAmount : 0)
                 .build()) {
 
-            List<String[]> allData = reader.readAll();
+            String[] previousLine = null;
+            String[] currentLine;
+            int lineCount = 0;
 
-            if (!allData.isEmpty()) {
-                for(String[] fields:allData) {
-                    resultList.add(fields);
+            while ((currentLine = reader.readNext()) != null && lineCount < MAX_LINES) {
+                if (previousLine == null || !Arrays.equals(previousLine, currentLine)) {
+                    resultList.add(currentLine);
+                    lineCount++;
                 }
+                previousLine = currentLine;
             }
+
         } catch (IOException | CsvException e) {
             e.printStackTrace();
         }
-        return  resultList;
+
+        return resultList;
     }
+
+//    public List<String[]> readLines(Integer skipLinesAmount, List<Integer> indices) {
+//        List<String[]> resultList = new ArrayList<>();
+//        final int MAX_LINES = 100;
+//
+//        CSVParser csvParser = new CSVParserBuilder()
+//                .withSeparator(csvSeparator)
+//                .build();
+//
+//        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
+//                .withCSVParser(csvParser)
+//                .withSkipLines(skipLinesAmount != null ? skipLinesAmount : 0)
+//                .build()) {
+//
+//            String[] previousLine = null;
+//            String[] currentLine;
+//            int lineCount = 0;
+//
+//            while ((currentLine = reader.readNext()) != null && lineCount < MAX_LINES) {
+//                if (previousLine == null || !Arrays.equals(previousLine, currentLine)) {
+//                    System.out.println(">>>"+String.join(",",currentLine));
+//                    String[] filteredLine = filterByIndices(currentLine, indices);
+//                    System.out.println("<<<"+String.join(",",filteredLine));
+//                    resultList.add(filteredLine);
+//                    lineCount++;
+//                }
+//                previousLine = currentLine;
+//            }
+//
+//        } catch (IOException | CsvException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return resultList;
+//    }
+//
+//    private String[] filterByIndices(String[] originalArray, List<Integer> indices) {
+//        if (indices == null || indices.isEmpty()) {
+//            return originalArray;
+//        }
+//
+//        return indices.stream()
+//                .filter(index -> index != null && index >= 0 && index < originalArray.length)
+//                .map(index -> originalArray[index])
+//                .toArray(String[]::new);
+//    }
 
 
 }

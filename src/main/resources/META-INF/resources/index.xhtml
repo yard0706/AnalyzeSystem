@@ -28,6 +28,10 @@
             <aside class="sidebar" id="sidebar">
                 <h:form id="sidebarForm">
                     <p:growl id="msgs" showDetail="true" skipDetailIfEqualsSummary="true"/>
+                    <div class="block text-center">
+                        <progress id="fileProgress" style="width: 100px; height: 20px;display:none;" indeterminate="true"/>
+                    </div>
+
                     <p:dataTable id="filesTable" var="file" value="#{filesMBean.filesList}"
                                  sortBy="#{file.groupName}" sortOrder="desc"
                                  size="small" styleClass="hide-datatable-header"
@@ -35,7 +39,10 @@
                                  selection="#{filesMBean.selectedFile}" rowKey="#{file.id}"
                                  widgetVar="filesTableWidget"
                                  rowIndexVar="rowIndex">
-                        <p:ajax event="rowSelect" listener="#{filesMBean.onRowSelect}" update=":sidebarForm:msgs :contentForm"/>
+                        <p:ajax event="rowSelect" listener="#{filesMBean.onRowSelect}" update=":sidebarForm:msgs :contentForm"
+                                onstart="document.getElementById('fileProgress').style.display = 'block'"
+                                oncomplete="document.getElementById('fileProgress').style.display = 'none'"
+                        />
 
                         <p:headerRow field="groupName"
                                      expandable="true"
@@ -84,14 +91,31 @@
                                 <p:ajax event="change" listener="#{filesMBean.onChangeParams}" />
                             </p:selectOneButton>
                             <p:commandButton type="button" icon="pi pi-bars" onclick="PF('previewDialog').show()" style="margin-left: 20px;"/>
+
+                            <p:selectOneMenu id="countryMenu"
+                                             value="#{dataViewBean.selectedFilesPattern}"
+                                             style="margin-left: 20px;">
+                                <f:selectItem itemLabel="Выберите шаблон..." itemValue="" />
+                                <f:selectItems value="#{dataViewBean.filesPatterns}" />
+
+                                <!-- AJAX событие при изменении выбора -->
+                                <p:ajax event="change"
+                                        listener="#{filesMBean.onChangeParams}"
+                                        update=":contentForm:fileDataTable"
+                                        process="@this"/>
+                            </p:selectOneMenu>
                         </p:toolbarGroup>
 
                     </p:toolbar>
 
                     <p:dataTable id="fileDataTable" var="data" value="#{dataViewBean.records}" widgetVar="fileDataWidget"
-                                 size="small" class="text-sm">
+                                 size="small" class="text-sm"
+                                 liveResize="true" resizableColumns="true"
+                                 scrollable="true" style="height: calc(100vh - 250px); table-layout: fixed; max-width: calc(100vw - 300px);"
+                                 frozenRows="1">
 
-                        <p:columns value="#{dataViewBean.columns}" var="column" headerText="#{column.columnName}" autoResize="true  ">
+                        <p:columns value="#{dataViewBean.columns}" var="column" headerText="#{column.columnName}"
+                                   style="#{column.style}">
                             <h:outputText value="#{data[column.keyColumn]}"/>
                         </p:columns>
 
