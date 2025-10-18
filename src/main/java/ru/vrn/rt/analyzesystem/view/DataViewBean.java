@@ -1,24 +1,34 @@
 package ru.vrn.rt.analyzesystem.view;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItemGroup;
 import jakarta.faces.view.ViewScoped;
+import org.apache.commons.lang3.StringUtils;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.springframework.stereotype.Component;
+import ru.vrn.rt.analyzesystem.anlyze.MobileConnections;
 import ru.vrn.rt.analyzesystem.filereader.csv.CsvDataExtractor;
 import ru.vrn.rt.analyzesystem.view.model.ColumnModel;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 import jakarta.faces.model.SelectItem;
 
 @Component
-@ViewScoped
+@SessionScoped
 public class DataViewBean {
     private List<ColumnModel> columns;
     private List<String[]> records;
     private Map<String, List<Integer>> filesPatternsMap;
     private String selectedFilesPattern;
     private List<String> filesPatterns = new ArrayList<>();
+    private StreamedContent downloadFile;
 
     private String filePath;
     private String separatorChar;
@@ -41,6 +51,31 @@ public class DataViewBean {
             columns.add( new ColumnModel(cKey,csvDataExtractor.getColumnsMap(filesPatternsMap.get(selectedFilesPattern)).get(cKey), "width: 200px") );
         }
         records = csvDataExtractor.readLines(1); // 1 - means skip headers
+    }
+
+    public StreamedContent getAnalyzedFile()
+    {
+        System.out.println("getAnalyzedFile start");
+        if (filePath==null) {
+            System.out.println("filePath is null");
+            return null;
+        }
+        String analyzeResultXlsxFileName = ( new MobileConnections(filePath, encoding, separatorChar.charAt(0)) ).analyze();
+
+        System.out.println("filePath >>> " + analyzeResultXlsxFileName);
+        System.out.println(StringUtils.substringAfterLast(analyzeResultXlsxFileName, File.separator));
+        return DefaultStreamedContent.builder()
+                .name(StringUtils.substringAfterLast(analyzeResultXlsxFileName, File.separator))
+                .contentType("application/vnd.ms-excel")
+                .stream(() -> {
+                    try {
+                        return new FileInputStream(new File(analyzeResultXlsxFileName));
+                    } catch (FileNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .build();
+
     }
 
     public List<ColumnModel> getColumns() {

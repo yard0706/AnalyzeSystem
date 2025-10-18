@@ -104,6 +104,10 @@
                                         update=":contentForm:fileDataTable"
                                         process="@this"/>
                             </p:selectOneMenu>
+
+                            <p:commandButton value="Аналитика" icon="pi pi-chart-bar" styleClass="ui-button-outlined" style="margin-left: 20px;">
+                                <p:fileDownload value="#{dataViewBean.analyzedFile}"/>
+                            </p:commandButton>
                         </p:toolbarGroup>
 
                     </p:toolbar>
