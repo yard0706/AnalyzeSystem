@@ -70,14 +70,11 @@ public class FilesMBean {
 
     @PostConstruct
     public void init() {
-        System.out.println("-=> init start");
         updateFilesList();
 
         String folderPath = "/home/user/temp";
         String[] extensions = {"csv", "xls", "xlsx"};
         allFiles = FolderReader.getAllFilePathsWithTime(folderPath, extensions);
-        System.out.println(">>>> allFiles size "+allFiles.size());
-        System.out.println("-=> finish start");
     }
 
     public List<FolderInfo> completeFolders(String query) {
