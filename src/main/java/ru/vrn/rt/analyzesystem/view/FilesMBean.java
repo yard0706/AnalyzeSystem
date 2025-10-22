@@ -11,6 +11,8 @@ import org.primefaces.event.SelectEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ru.vrn.rt.analyzesystem.filereader.FolderInfo;
+import ru.vrn.rt.analyzesystem.filereader.FolderReader;
 import ru.vrn.rt.analyzesystem.filereader.preview.FileReaderFactory;
 import ru.vrn.rt.analyzesystem.filereader.preview.FilesReader;
 import ru.vrn.rt.analyzesystem.persistence.service.FileRecordService;
@@ -18,7 +20,6 @@ import ru.vrn.rt.analyzesystem.view.dto.FileRecordViewDTO;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,6 +43,16 @@ public class FilesMBean {
     private FileRecordViewDTO selectedFile;
     private String selectedFilePreview = "test text";
 
+    private List<FolderInfo> allFiles;
+    private FolderInfo foundFile;
+
+    public List<FolderInfo> getAllFiles() {
+        return allFiles;
+    }
+    public void setAllFiles(List<FolderInfo> allFiles) {
+        this.allFiles = allFiles;
+    }
+
     private void updateFilesList() {
         ModelMapper modelMapper = new ModelMapper();
         List<FileRecordViewDTO> resultList = fileService.getAllFiles().stream()
@@ -59,13 +70,38 @@ public class FilesMBean {
 
     @PostConstruct
     public void init() {
+        System.out.println("-=> init start");
         updateFilesList();
+
+        String folderPath = "/home/user/temp";
+        String[] extensions = {"csv", "xls", "xlsx"};
+        allFiles = FolderReader.getAllFilePathsWithTime(folderPath, extensions);
+        System.out.println(">>>> allFiles size "+allFiles.size());
+        System.out.println("-=> finish start");
+    }
+
+    public List<FolderInfo> completeFolders(String query) {
+        return allFiles.stream().filter(f-> f.getFilePath().toLowerCase().contains(query.toLowerCase())).toList();
+    }
+
+    public void onFolderSearchSelect(SelectEvent<FolderInfo> event) {
+        FacesMessage msg = new FacesMessage("File Selected", String.valueOf(event.getObject().getFilePath()));
+        FacesContext.getCurrentInstance().addMessage(null, msg);
+
+        FileRecordViewDTO fileRecordViewDTO = new FileRecordViewDTO();
+        fileRecordViewDTO.setFilePath(event.getObject().getFilePath());
+        selectedFile = fileRecordViewDTO;
+        openFile();
     }
 
     public void onRowSelect(SelectEvent<FileRecordViewDTO> event) {
         FacesMessage msg = new FacesMessage("File Selected", String.valueOf(event.getObject().getFileName()));
         FacesContext.getCurrentInstance().addMessage(null, msg);
 
+        openFile();
+    }
+
+    private void openFile() {
         File fileObj = new File(selectedFile.getFilePath());
         if (fileObj.exists()) {
             FilesReader reader = FileReaderFactory.getReader(selectedFile.getFilePath());
@@ -134,5 +170,13 @@ public class FilesMBean {
 
     public void setEncoding(String encoding) {
         this.encoding = encoding;
+    }
+
+    public FolderInfo getFoundFile() {
+        return foundFile;
+    }
+
+    public void setFoundFile(FolderInfo foundFile) {
+        this.foundFile = foundFile;
     }
 }

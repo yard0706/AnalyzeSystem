@@ -20,7 +20,17 @@
 <h:body>
     <div class="container">
         <header class="header">
-            <h1>...</h1>
+            <p:autoComplete id="folderSearch" value="#{filesMBean.foundFile}"
+                            completeMethod="#{filesMBean.completeFolders}"
+                            var="folder" itemLabel="#{folder.filePath}" itemValue="#{folder}"
+                            converter="#{foldersConverter}" forceSelection="true" scrollHeight="600"
+                            style="width: 400px;">
+                <p:ajax event="itemSelect" listener="#{filesMBean.onFolderSearchSelect}" update=":sidebarForm:msgs :contentForm"/>
+                <p:column>
+                    <h:outputText style="vertical-align: middle; margin-left: .2rem" value="#{folder.modifyTime}"/>
+                    <h:outputText style="vertical-align: middle; margin-left: .5rem" value="#{folder.filePath}"/>
+                </p:column>
+            </p:autoComplete>
             <button id="toggleSidebar" class="toggle-btn">☰</button>
         </header>
 
