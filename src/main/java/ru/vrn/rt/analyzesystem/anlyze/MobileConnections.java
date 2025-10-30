@@ -5,6 +5,8 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvException;
+import ru.vrn.rt.analyzesystem.anlyze.excel.beans.AddressCountBean;
+import ru.vrn.rt.analyzesystem.anlyze.excel.beans.ThreesomeBean;
 import ru.vrn.rt.analyzesystem.anlyze.excel.beans.CountMsisdnAggreagateBean;
 import ru.vrn.rt.analyzesystem.anlyze.excel.beans.SumAndAvrAggregateBean;
 import ru.vrn.rt.analyzesystem.anlyze.excel.ExcelExporter;
@@ -46,6 +48,14 @@ public class MobileConnections {
             List<SumAndAvrAggregateBean> durationSumList = sumValuesFromColumnDuration(1);
             durationSumList.sort(Comparator.comparingInt(SumAndAvrAggregateBean::getSum).reversed());
             ExcelExporter.exportToExcel(durationSumList, xlsxFilePath, "длительность");
+            //count base stations addresses at night
+            List<AddressCountBean> nightBSList = getUniqueValuesFromAddressDuringNightHours(1);
+            nightBSList.sort(Comparator.comparingInt(AddressCountBean::getCount).reversed());
+            ExcelExporter.exportToExcel(nightBSList, xlsxFilePath, "ночные БС");
+            //count base stations addresses at night
+            List<ThreesomeBean> threesList = getUniqueThreesome(1);
+            ExcelExporter.exportToExcel(threesList, xlsxFilePath, "тройка");
+
 
         return xlsxFilePath;
     }
@@ -161,5 +171,135 @@ public class MobileConnections {
         }
 
         return aggregateMap.values().stream().collect(Collectors.toList());
+    }
+
+    public List<AddressCountBean> getUniqueValuesFromAddressDuringNightHours(Integer skipLinesAmount) {
+        Map<String, AddressCountBean> valueCountMap = new HashMap<>();
+        final int TIME_COLUMN = 3; // Столбец 4 (индексация с 0) - время
+        final int TARGET_COLUMN = 22; // Столбец 23 (индексация с 0)
+
+        CSVParser csvParser = new CSVParserBuilder()
+                .withSeparator(csvSeparator)
+                .build();
+
+        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
+                .withCSVParser(csvParser)
+                .withSkipLines(skipLinesAmount != null ? skipLinesAmount : 0)
+                .build()) {
+
+            String[] previousLine = null;
+            String[] currentLine;
+
+            while ((currentLine = reader.readNext()) != null) {
+                if (previousLine == null || !Arrays.equals(previousLine, currentLine)) {
+                    // Проверяем, что оба столбца существуют в текущей строке
+                    if (currentLine.length > TIME_COLUMN && currentLine.length > TARGET_COLUMN) {
+                        String timeValue = currentLine[TIME_COLUMN];
+                        String targetValue = currentLine[TARGET_COLUMN];
+
+                        // Проверяем время (с 01:00 до 05:00)
+                        if (isTimeBetween1AMAnd5AM(timeValue)) {
+                            // Обрабатываем значение из столбца 23
+                            if (targetValue != null && !targetValue.trim().isEmpty()) {
+                                String value = targetValue.trim();
+
+                                // Обновляем счетчик для данного значения
+                                AddressCountBean bean = valueCountMap.get(value);
+                                if (bean == null) {
+                                    bean = new AddressCountBean(value);
+                                    valueCountMap.put(value, bean);
+                                }
+                                bean.incrementCount();
+                            }
+                        }
+                    }
+                }
+                previousLine = currentLine;
+            }
+
+        } catch (IOException | CsvException e) {
+            e.printStackTrace();
+        }
+
+        return new ArrayList<>(valueCountMap.values());
+    }
+
+    // Вспомогательный метод для проверки времени в формате "01.01.2023 15:20:18"
+    private boolean isTimeBetween1AMAnd5AM(String timeValue) {
+        if (timeValue == null || timeValue.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            // Разделяем дату и время
+            String[] datetimeParts = timeValue.split(" ");
+            if (datetimeParts.length >= 2) {
+                String timePart = datetimeParts[1]; // Берем часть с временем "15:20:18"
+                String[] timeParts = timePart.split(":");
+                if (timeParts.length >= 2) {
+                    int hour = Integer.parseInt(timeParts[0].trim());
+                    // Проверяем период с 1:00 до 5:00
+                    return hour >= 1 && hour < 5;
+                }
+            }
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+            System.err.println("Некорректный формат времени: " + timeValue);
+        }
+
+        return false;
+    }
+
+    public List<ThreesomeBean> getUniqueThreesome(Integer skipLinesAmount) {
+        Map<String, ThreesomeBean> uniqueMap = new HashMap<>();
+        final int MSISDN = 8;  // Столбец 9 (индексация с 0)
+        final int IMSI = 9; // Столбец 10 (индексация с 0)
+        final int IMEI = 10; // Столбец 11 (индексация с 0)
+
+        CSVParser csvParser = new CSVParserBuilder()
+                .withSeparator(csvSeparator)
+                .build();
+
+        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
+                .withCSVParser(csvParser)
+                .withSkipLines(skipLinesAmount != null ? skipLinesAmount : 0)
+                .build()) {
+
+            String[] previousLine = null;
+            String[] currentLine;
+
+            while ((currentLine = reader.readNext()) != null) {
+                if (previousLine == null || !Arrays.equals(previousLine, currentLine)) {
+                    // Проверяем, что все три столбца существуют в текущей строке
+                    if (currentLine.length > IMEI) {
+                        String value9 = getValueOrEmpty(currentLine[MSISDN]);
+                        String value10 = getValueOrEmpty(currentLine[IMSI]);
+                        String value11 = getValueOrEmpty(currentLine[IMEI]);
+
+                        // Создаем ключ для уникальности по всем трем значениям
+                        String key = value9 + "|" + value10 + "|" + value11;
+
+                        // Если такого сочетания значений еще нет, добавляем в карту
+                        if (!uniqueMap.containsKey(key)) {
+                            ThreesomeBean bean = new ThreesomeBean();
+                            bean.setMsisdn(value9);
+                            bean.setImsi(value10);
+                            bean.setImei(value11);
+                            uniqueMap.put(key, bean);
+                        }
+                    }
+                }
+                previousLine = currentLine;
+            }
+
+        } catch (IOException | CsvException e) {
+            e.printStackTrace();
+        }
+
+        return new ArrayList<>(uniqueMap.values());
+    }
+
+    // Вспомогательный метод для обработки пустых значений
+    private String getValueOrEmpty(String value) {
+        return (value == null || value.trim().isEmpty()) ? "(пустое значение)" : value.trim();
     }
 }

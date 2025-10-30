@@ -10,16 +10,21 @@ import org.primefaces.PrimeFaces;
 import org.primefaces.event.SelectEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import ru.vrn.rt.analyzesystem.filereader.FolderInfo;
 import ru.vrn.rt.analyzesystem.filereader.FolderReader;
 import ru.vrn.rt.analyzesystem.filereader.preview.FileReaderFactory;
 import ru.vrn.rt.analyzesystem.filereader.preview.FilesReader;
+import ru.vrn.rt.analyzesystem.persistence.entity.FileRecord;
 import ru.vrn.rt.analyzesystem.persistence.service.FileRecordService;
 import ru.vrn.rt.analyzesystem.view.dto.FileRecordViewDTO;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,6 +42,9 @@ public class FilesMBean {
     private String separatorChar;
     @Value("${default.csv.encoding}")
     private String encoding;
+    @Value("${folders.path}")
+    private String folderPath;
+    String[] extensions = {"csv", "xls", "xlsx"};
 
 
     private List<FileRecordViewDTO> filesList = new ArrayList<>();
@@ -68,12 +76,15 @@ public class FilesMBean {
         filesList = resultList;
     }
 
+
     @PostConstruct
     public void init() {
         updateFilesList();
+        allFiles = FolderReader.getAllFilePathsWithTime(folderPath, extensions);
+    }
 
-        String folderPath = "/home/user/temp";
-        String[] extensions = {"csv", "xls", "xlsx"};
+    @Scheduled(fixedRateString = "${folders.update.task.interval}")
+    public void updateFilesFolder() {
         allFiles = FolderReader.getAllFilePathsWithTime(folderPath, extensions);
     }
 
@@ -89,6 +100,21 @@ public class FilesMBean {
         fileRecordViewDTO.setFilePath(event.getObject().getFilePath());
         selectedFile = fileRecordViewDTO;
         openFile();
+
+        FileRecord fileRecord = new FileRecord();
+        fileRecord.setFileName(getFileName(selectedFile.getFilePath()));
+        fileRecord.setFilePath(selectedFile.getFilePath());
+        fileRecord.setLoadTime(LocalDateTime.now());
+        fileService.createFileRecord(fileRecord);
+    }
+
+    private String getFileName(String filePath) {
+        if (filePath == null || filePath.isEmpty()) {
+            return "";
+        }
+
+        Path path = Paths.get(filePath);
+        return path.getFileName().toString();
     }
 
     public void onRowSelect(SelectEvent<FileRecordViewDTO> event) {
@@ -175,5 +201,13 @@ public class FilesMBean {
 
     public void setFoundFile(FolderInfo foundFile) {
         this.foundFile = foundFile;
+    }
+
+    public String getFolderPath() {
+        return folderPath;
+    }
+
+    public void setFolderPath(String folderPath) {
+        this.folderPath = folderPath;
     }
 }
