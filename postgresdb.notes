@@ -7,3 +7,70 @@
 
     docker start postgres
 
+
+    -- Таблица для хранения метаданных файлов
+    CREATE TABLE file_metadata (
+        id BIGSERIAL PRIMARY KEY,
+        file_path VARCHAR(2000) NOT NULL,
+        file_name VARCHAR(500) NOT NULL,
+        parent_directory VARCHAR(2000) NOT NULL,
+        file_size BIGINT NOT NULL,
+        last_modified TIMESTAMP NOT NULL,
+        file_hash VARCHAR(64), -- SHA-256 для обнаружения изменений
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_deleted BOOLEAN DEFAULT FALSE,
+        scan_version BIGINT NOT NULL DEFAULT 0
+    );
+
+    -- Индексы для таблицы file_metadata
+    CREATE INDEX idx_file_path ON file_metadata (file_path);
+    CREATE INDEX idx_parent_directory ON file_metadata (parent_directory);
+    CREATE INDEX idx_last_modified ON file_metadata (last_modified);
+    CREATE INDEX idx_scan_version ON file_metadata (scan_version);
+    CREATE INDEX idx_deleted_scan ON file_metadata (is_deleted, scan_version);
+    CREATE UNIQUE INDEX idx_unique_path ON file_metadata (file_path);
+
+    -- Функция для автоматического обновления updated_at
+    CREATE OR REPLACE FUNCTION update_updated_at_column()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.updated_at = CURRENT_TIMESTAMP;
+        RETURN NEW;
+    END;
+    $$ language 'plpgsql';
+
+    -- Триггер для автоматического обновления updated_at
+    CREATE TRIGGER update_file_metadata_updated_at
+        BEFORE UPDATE ON file_metadata
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+
+    -- Таблица для отслеживания сканирований
+    CREATE TABLE scan_history (
+        id BIGSERIAL PRIMARY KEY,
+        scan_version BIGINT NOT NULL,
+        scan_started TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        scan_completed TIMESTAMP NULL,
+        total_files BIGINT DEFAULT 0,
+        new_files BIGINT DEFAULT 0,
+        deleted_files BIGINT DEFAULT 0,
+        modified_files BIGINT DEFAULT 0,
+        status VARCHAR(20) DEFAULT 'RUNNING' CHECK (status IN ('RUNNING', 'COMPLETED', 'FAILED'))
+    );
+
+    -- Таблица для событий файловой системы
+    CREATE TABLE file_events (
+        id BIGSERIAL PRIMARY KEY,
+        file_path VARCHAR(2000) NOT NULL,
+        event_type VARCHAR(20) NOT NULL CHECK (event_type IN ('CREATED', 'DELETED', 'MODIFIED', 'RENAMED')),
+        event_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        old_path VARCHAR(2000), -- для событий переименования
+        processed BOOLEAN DEFAULT FALSE
+    );
+
+    -- Индексы для таблицы file_events
+    CREATE INDEX idx_file_events_path ON file_events (file_path);
+    CREATE INDEX idx_file_events_timestamp ON file_events (event_timestamp);
+    CREATE INDEX idx_file_events_processed ON file_events (processed);
+

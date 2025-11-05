@@ -60,7 +60,7 @@ public Map<String, Integer> getColumnsMap(List<Integer> selectedIndices) {
         String[] firstLine = reader.readNext();
         if (firstLine == null) throw new IllegalArgumentException("CSV файл пуст или не содержит данных");
 
-        if (selectedIndices == null || selectedIndices.isEmpty()) {
+        if (selectedIndices == null || selectedIndices.isEmpty() || selectedIndices.get(0).equals(-1)) {
             for (int i = 0; i < firstLine.length; i++) {
                 resultMap.put(firstLine[i], i);
             }

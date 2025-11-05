@@ -7,25 +7,25 @@ import jakarta.faces.convert.Converter;
 import jakarta.faces.convert.FacesConverter;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import ru.vrn.rt.analyzesystem.filereader.FolderInfo;
+import ru.vrn.rt.analyzesystem.filereader.FileInfo;
 import ru.vrn.rt.analyzesystem.view.FilesMBean;
 
 @Named
 @ApplicationScoped
 @FacesConverter(value = "foldersConverter", managed = true)
-public class FoldersConverter implements Converter<FolderInfo> {
+public class FoldersConverter implements Converter<FileInfo> {
 
     @Inject
     private FilesMBean filesMBean;
 
 
     @Override
-    public FolderInfo getAsObject(FacesContext facesContext, UIComponent uiComponent, String s) {
+    public FileInfo getAsObject(FacesContext facesContext, UIComponent uiComponent, String s) {
         return filesMBean.getAllFiles().stream().filter(f->f.getFilePath().equals(s)).toList().getFirst();
     }
 
     @Override
-    public String getAsString(FacesContext facesContext, UIComponent uiComponent, FolderInfo folderInfo) {
-        return folderInfo.getFilePath();
+    public String getAsString(FacesContext facesContext, UIComponent uiComponent, FileInfo fileInfo) {
+        return fileInfo.getFilePath();
     }
 }

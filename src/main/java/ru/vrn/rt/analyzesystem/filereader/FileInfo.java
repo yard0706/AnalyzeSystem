@@ -4,12 +4,12 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-public class FolderInfo {
+public class FileInfo {
     private final String filePath;
     private final long modifyTime; // время в миллисекундах
     private final LocalDateTime modifyDateTime; // время в удобном формате
 
-    public FolderInfo(String filePath, long modifyTime) {
+    public FileInfo(String filePath, long modifyTime) {
         this.filePath = filePath;
         this.modifyTime = modifyTime;
         this.modifyDateTime = LocalDateTime.ofInstant(

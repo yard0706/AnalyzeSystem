@@ -12,10 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import ru.vrn.rt.analyzesystem.filereader.FolderInfo;
+import ru.vrn.rt.analyzesystem.filereader.FileInfo;
 import ru.vrn.rt.analyzesystem.filereader.FolderReader;
 import ru.vrn.rt.analyzesystem.filereader.preview.FileReaderFactory;
 import ru.vrn.rt.analyzesystem.filereader.preview.FilesReader;
+import ru.vrn.rt.analyzesystem.filereader.service.FilesMonitorService;
 import ru.vrn.rt.analyzesystem.persistence.entity.FileRecord;
 import ru.vrn.rt.analyzesystem.persistence.service.FileRecordService;
 import ru.vrn.rt.analyzesystem.view.dto.FileRecordViewDTO;
@@ -46,18 +47,21 @@ public class FilesMBean {
     private String folderPath;
     String[] extensions = {"csv", "xls", "xlsx"};
 
+    @Autowired
+    private FilesMonitorService fmService;
+
 
     private List<FileRecordViewDTO> filesList = new ArrayList<>();
     private FileRecordViewDTO selectedFile;
     private String selectedFilePreview = "test text";
 
-    private List<FolderInfo> allFiles;
-    private FolderInfo foundFile;
+    private List<FileInfo> allFiles;
+    private FileInfo foundFile;
 
-    public List<FolderInfo> getAllFiles() {
+    public List<FileInfo> getAllFiles() {
         return allFiles;
     }
-    public void setAllFiles(List<FolderInfo> allFiles) {
+    public void setAllFiles(List<FileInfo> allFiles) {
         this.allFiles = allFiles;
     }
 
@@ -80,19 +84,21 @@ public class FilesMBean {
     @PostConstruct
     public void init() {
         updateFilesList();
-        allFiles = FolderReader.getAllFilePathsWithTime(folderPath, extensions);
+//        allFiles = FolderReader.getAllFilePathsWithTime(folderPath, extensions);
+        allFiles = fmService.getAllFiles();
     }
 
     @Scheduled(fixedRateString = "${folders.update.task.interval}")
     public void updateFilesFolder() {
-        allFiles = FolderReader.getAllFilePathsWithTime(folderPath, extensions);
+//        allFiles = FolderReader.getAllFilePathsWithTime(folderPath, extensions);
+        allFiles = fmService.getAllFiles();
     }
 
-    public List<FolderInfo> completeFolders(String query) {
+    public List<FileInfo> completeFolders(String query) {
         return allFiles.stream().filter(f-> f.getFilePath().toLowerCase().contains(query.toLowerCase())).toList();
     }
 
-    public void onFolderSearchSelect(SelectEvent<FolderInfo> event) {
+    public void onFolderSearchSelect(SelectEvent<FileInfo> event) {
         FacesMessage msg = new FacesMessage("File Selected", String.valueOf(event.getObject().getFilePath()));
         FacesContext.getCurrentInstance().addMessage(null, msg);
 
@@ -139,6 +145,7 @@ public class FilesMBean {
 
         dataViewBean.setFilePath(selectedFile.getFilePath());
         dataViewBean.setSeparatorChar(separatorChar);
+        dataViewBean.autoSelectFilePattern();
         dataViewBean.init();
         PrimeFaces.current().ajax().update(":contentForm:fileDataTable");
     }
@@ -195,11 +202,11 @@ public class FilesMBean {
         this.encoding = encoding;
     }
 
-    public FolderInfo getFoundFile() {
+    public FileInfo getFoundFile() {
         return foundFile;
     }
 
-    public void setFoundFile(FolderInfo foundFile) {
+    public void setFoundFile(FileInfo foundFile) {
         this.foundFile = foundFile;
     }
 

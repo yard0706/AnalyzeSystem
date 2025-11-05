@@ -63,7 +63,7 @@ body {
 
 .content {
   flex: 1;
-  padding: 1rem;
+  padding: 0rem;
   background: #ecf0f1;
   color: darkgrey;
 }

@@ -27,7 +27,7 @@
                             style="width: 400px;">
                 <p:ajax event="itemSelect" listener="#{filesMBean.onFolderSearchSelect}" update=":sidebarForm:msgs :contentForm"/>
                 <p:column>
-                    <h:outputText style="vertical-align: middle; margin-left: .2rem" value="#{folder.modifyTime}"/>
+                    <h:outputText style="vertical-align: middle; margin-left: .2rem" value="#{folder.modifyDateTime}"/>
                     <h:outputText style="vertical-align: middle; margin-left: .5rem" value="#{folder.filePath}"/>
                 </p:column>
             </p:autoComplete>
@@ -115,7 +115,15 @@
                                         process="@this"/>
                             </p:selectOneMenu>
 
-                            <p:commandButton value="Аналитика" icon="pi pi-chart-bar" styleClass="ui-button-outlined" style="margin-left: 20px;">
+                            <p:commandButton id="analyzeReportButton" value="Аналитика" icon="pi pi-chart-bar"
+                                             styleClass="ui-button-outlined" style="margin-left: 20px;"
+                                             action="#{dataViewBean.analyzeFile}"
+                                             oncomplete="document.getElementById('contentForm:uploadAnalyzeReportButton').click();"
+                                             update=":sidebarForm:msgs :contentForm">
+                            </p:commandButton>
+
+                            <p:commandButton id="uploadAnalyzeReportButton" value="Аналитика" style="margin-left: 20px; display: none;"
+                                             update=":sidebarForm:msgs :contentForm">
                                 <p:fileDownload value="#{dataViewBean.analyzedFile}"/>
                             </p:commandButton>
                         </p:toolbarGroup>

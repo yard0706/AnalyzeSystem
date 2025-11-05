@@ -14,15 +14,10 @@ import ru.vrn.rt.analyzesystem.anlyze.excel.ExcelExporter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MobileConnections {
-    private String filePath;
-    private String csvCharset;
-    private Character csvSeparator;
+public class MobileConnections extends Analyzer {
 
     public MobileConnections(String filePath, String csvCharset, Character csvSeparator) {
         this.filePath = filePath;
@@ -59,24 +54,6 @@ public class MobileConnections {
 
         return xlsxFilePath;
     }
-
-    private String createXlsxFilenameExtention(String filePath, String suffics) {
-        if (filePath == null || filePath.trim().isEmpty()) {
-            throw new IllegalArgumentException("File path cannot be null or empty");
-        }
-
-        Path path = Paths.get(filePath);
-        String fileName = path.getFileName().toString();
-
-        // Заменяем расширение на .xlsx
-        int lastDotIndex = fileName.lastIndexOf(".");
-        String newFileName = (lastDotIndex != -1)
-                ? fileName.substring(0, lastDotIndex) + suffics +".xlsx"
-                : fileName + ".xlsx";
-
-        return path.resolveSibling(newFileName).toString();
-    }
-
 
     public List<CountMsisdnAggreagateBean> countUniqueMsisdn(Integer skipLinesAmount) {
         Map<String, Integer> valueCounts = new HashMap<>();
