@@ -77,6 +77,10 @@ public class FilesMBean {
                 ); return f;})
                 .collect(Collectors.toList());
 
+        resultList = resultList.stream()
+                .filter(f->new File(f.getFilePath()).exists())
+                .collect(Collectors.toList());
+
         filesList = resultList;
     }
 
@@ -92,6 +96,14 @@ public class FilesMBean {
     public void updateFilesFolder() {
 //        allFiles = FolderReader.getAllFilePathsWithTime(folderPath, extensions);
         allFiles = fmService.getAllFiles();
+    }
+
+    public void updateSidebarFilesList() {
+        System.out.println("updateSidebarFilesList");
+        updateFilesList();
+//        for(FileRecordViewDTO f:filesList)
+//            System.out.println("-> "+f);
+        PrimeFaces.current().ajax().update(":sidebarForm");
     }
 
     public List<FileInfo> completeFolders(String query) {
@@ -112,6 +124,8 @@ public class FilesMBean {
         fileRecord.setFilePath(selectedFile.getFilePath());
         fileRecord.setLoadTime(LocalDateTime.now());
         fileService.createFileRecord(fileRecord);
+
+        PrimeFaces.current().ajax().update(":sidebarForm:filesTable");
     }
 
     private String getFileName(String filePath) {

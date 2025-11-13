@@ -5,7 +5,9 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvException;
+import org.springframework.core.io.ClassPathResource;
 import ru.vrn.rt.analyzesystem.anlyze.excel.ExcelExporter;
+import ru.vrn.rt.analyzesystem.anlyze.excel.beans.CountIpAggregateBean;
 import ru.vrn.rt.analyzesystem.anlyze.excel.beans.CountSslSniAggregateBean;
 import ru.vrn.rt.analyzesystem.anlyze.excel.beans.SumAndAvrSslSniAggregateBean;
 
@@ -36,12 +38,12 @@ public class InternetNoDecodeConnections extends Analyzer {
         durationSumList.sort(Comparator.comparingInt(SumAndAvrSslSniAggregateBean::getSum).reversed());
         ExcelExporter.exportToExcel(durationSumList, xlsxFilePath, "трафик");
         //count unique servers ip
-        List<CountSslSniAggregateBean> uniqueIpList = countUniqueIpServer(1);
-        uniqueIpList.sort(Comparator.comparingInt(CountSslSniAggregateBean::getCount).reversed());
+        List<CountIpAggregateBean> uniqueIpList = countUniqueIpServer(1);
+        uniqueIpList.sort(Comparator.comparingInt(CountIpAggregateBean::getCount).reversed());
         ExcelExporter.exportToExcel(uniqueIpList, xlsxFilePath, "IP сервера");
         //count unique client ip
-        List<CountSslSniAggregateBean> uniqueClientIpList = countUniqueIpClient(1);
-        uniqueClientIpList.sort(Comparator.comparingInt(CountSslSniAggregateBean::getCount).reversed());
+        List<CountIpAggregateBean> uniqueClientIpList = countUniqueIpClient(1);
+        uniqueClientIpList.sort(Comparator.comparingInt(CountIpAggregateBean::getCount).reversed());
         ExcelExporter.exportToExcel(uniqueClientIpList, xlsxFilePath, "IP клиента");
         return xlsxFilePath;
     }
@@ -203,7 +205,14 @@ public class InternetNoDecodeConnections extends Analyzer {
         return aggregateMap.values().stream().collect(Collectors.toList());
     }
 
-    public List<CountSslSniAggregateBean> countUniqueIpServer(Integer skipLinesAmount) {
+    public List<CountIpAggregateBean> countUniqueIpServer(Integer skipLinesAmount) {
+        GeoIPLookup geoLookup;
+        try {
+            String databasePath = new ClassPathResource("GeoLite2-City.mmdb").getFile().getAbsolutePath();
+            geoLookup = new GeoIPLookup(databasePath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         Map<String, Integer> valueCounts = new HashMap<>();
         final int SSL_SNI_COLUMN = 7;
 
@@ -245,11 +254,18 @@ public class InternetNoDecodeConnections extends Analyzer {
         }
 
         return valueCounts.entrySet().stream()
-                .map(e -> new CountSslSniAggregateBean(e.getKey(), e.getValue()))
+                .map(e -> new CountIpAggregateBean(e.getKey(), geoLookup.lookupIP(e.getKey()), e.getValue()))
                 .collect(Collectors.toList());
     }
 
-    public List<CountSslSniAggregateBean> countUniqueIpClient(Integer skipLinesAmount) {
+    public List<CountIpAggregateBean> countUniqueIpClient(Integer skipLinesAmount) {
+        GeoIPLookup geoLookup;
+        try {
+            String databasePath = new ClassPathResource("GeoLite2-City.mmdb").getFile().getAbsolutePath();
+            geoLookup = new GeoIPLookup(databasePath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         Map<String, Integer> valueCounts = new HashMap<>();
         final int SSL_SNI_COLUMN = 5;
 
@@ -291,7 +307,7 @@ public class InternetNoDecodeConnections extends Analyzer {
         }
 
         return valueCounts.entrySet().stream()
-                .map(e -> new CountSslSniAggregateBean(e.getKey(), e.getValue()))
+                .map(e -> new CountIpAggregateBean(e.getKey(), geoLookup.lookupIP(e.getKey()), e.getValue()))
                 .collect(Collectors.toList());
     }
 

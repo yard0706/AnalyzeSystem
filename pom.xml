@@ -136,6 +136,13 @@
                 <version>5.4.1</version>
             </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.maxmind.geoip2/geoip2 -->
+        <dependency>
+            <groupId>com.maxmind.geoip2</groupId>
+            <artifactId>geoip2</artifactId>
+            <version>4.4.0</version>
+        </dependency>
+
 	</dependencies>
 
 

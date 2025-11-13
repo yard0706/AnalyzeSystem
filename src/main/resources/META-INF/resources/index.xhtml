@@ -37,6 +37,7 @@
         <div class="main-content">
             <aside class="sidebar" id="sidebar">
                 <h:form id="sidebarForm">
+                    <p:poll interval="5" listener="#{filesMBean.updateSidebarFilesList}" update=":sidebarForm" />
                     <p:growl id="msgs" showDetail="true" skipDetailIfEqualsSummary="true"/>
                     <div class="block text-center">
                         <progress id="fileProgress" style="width: 100px; height: 20px;display:none;" indeterminate="true"/>
