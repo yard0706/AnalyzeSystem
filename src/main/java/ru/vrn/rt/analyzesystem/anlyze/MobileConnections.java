@@ -19,6 +19,15 @@ import java.util.stream.Collectors;
 
 public class MobileConnections extends Analyzer {
 
+    // Константы для индексов столбцов
+    private static final int CONTACT_PHONE_COLUMN = 14;
+    private static final int DURATION_VALUE_COLUMN = 4;
+    private static final int TIME_COLUMN = 3;
+    private static final int ADDRESS_COLUMN = 22;
+    private static final int MSISDN_COLUMN = 8;
+    private static final int IMSI_COLUMN = 9;
+    private static final int IMEI_COLUMN = 10;
+
     public MobileConnections(String filePath, String csvCharset, Character csvSeparator) {
         this.filePath = filePath;
         this.csvCharset = csvCharset;
@@ -35,29 +44,34 @@ public class MobileConnections extends Analyzer {
 
     public String analyze() {
         String xlsxFilePath = createXlsxFilenameExtention(filePath, " analytics");
-            //count unique contacts and them amount
-            List<CountMsisdnAggreagateBean> uniqueList = countUniqueMsisdn(1);
-            uniqueList.sort(Comparator.comparingInt(CountMsisdnAggreagateBean::getCount).reversed());
-            ExcelExporter.exportToExcel(uniqueList, xlsxFilePath, "контакты");
-            //count unique contacts and summ them duration
-            List<SumAndAvrAggregateBean> durationSumList = sumValuesFromColumnDuration(1);
-            durationSumList.sort(Comparator.comparingInt(SumAndAvrAggregateBean::getSum).reversed());
-            ExcelExporter.exportToExcel(durationSumList, xlsxFilePath, "длительность");
-            //count base stations addresses at night
-            List<AddressCountBean> nightBSList = getUniqueValuesFromAddressDuringNightHours(1);
-            nightBSList.sort(Comparator.comparingInt(AddressCountBean::getCount).reversed());
-            ExcelExporter.exportToExcel(nightBSList, xlsxFilePath, "ночные БС");
-            //count base stations addresses at night
-            List<ThreesomeBean> threesList = getUniqueThreesome(1);
-            ExcelExporter.exportToExcel(threesList, xlsxFilePath, "тройка");
 
+        // Выполняем все вычисления за один проход
+        MobileAnalysisResult result = performSinglePassAnalysis(1);
+
+        // Экспортируем результаты
+        result.uniqueList.sort(Comparator.comparingInt(CountMsisdnAggreagateBean::getCount).reversed());
+        ExcelExporter.exportToExcel(result.uniqueList, xlsxFilePath, "контакты");
+
+        result.durationSumList.sort(Comparator.comparingInt(SumAndAvrAggregateBean::getSum).reversed());
+        ExcelExporter.exportToExcel(result.durationSumList, xlsxFilePath, "длительность");
+
+        result.nightBSList.sort(Comparator.comparingInt(AddressCountBean::getCount).reversed());
+        ExcelExporter.exportToExcel(result.nightBSList, xlsxFilePath, "ночные БС");
+
+        ExcelExporter.exportToExcel(result.threesList, xlsxFilePath, "тройка");
 
         return xlsxFilePath;
     }
 
-    public List<CountMsisdnAggreagateBean> countUniqueMsisdn(Integer skipLinesAmount) {
-        Map<String, Integer> valueCounts = new HashMap<>();
-        final int CONTACT_PHONE_COLUMN = 14; // Столбец 15 (индексация с 0)
+    /**
+     * Основной метод, выполняющий все вычисления за один проход по файлу
+     */
+    private MobileAnalysisResult performSinglePassAnalysis(Integer skipLinesAmount) {
+        // Структуры для сбора данных
+        Map<String, Integer> msisdnCounts = new HashMap<>();
+        Map<String, SumAndAvrAggregateBean> durationAggregates = new HashMap<>();
+        Map<String, AddressCountBean> nightAddressBeans = new HashMap<>();
+        Map<String, ThreesomeBean> uniqueThreesomes = new HashMap<>();
 
         CSVParser csvParser = new CSVParserBuilder()
                 .withSeparator(csvSeparator)
@@ -73,15 +87,7 @@ public class MobileConnections extends Analyzer {
 
             while ((currentLine = reader.readNext()) != null) {
                 if (previousLine == null || !Arrays.equals(previousLine, currentLine)) {
-                    // Проверяем, что столбец 14 существует в текущей строке
-                    if (currentLine.length > CONTACT_PHONE_COLUMN) {
-                        String value = currentLine[CONTACT_PHONE_COLUMN];
-                        // Если значение пустое или null, считаем как "пустое значение"
-                        if (value == null || value.trim().isEmpty()) {
-                            value = "(пустое значение)";
-                        }
-                        valueCounts.put(value, valueCounts.getOrDefault(value, 0) + 1);
-                    }
+                    processLine(currentLine, msisdnCounts, durationAggregates, nightAddressBeans, uniqueThreesomes);
                 }
                 previousLine = currentLine;
             }
@@ -90,115 +96,136 @@ public class MobileConnections extends Analyzer {
             e.printStackTrace();
         }
 
-        return valueCounts.entrySet().stream().map(e ->new CountMsisdnAggreagateBean(e.getKey(), e.getValue())).collect(Collectors.toList());
+        // Преобразуем собранные данные в итоговые результаты
+        return buildAnalysisResult(msisdnCounts, durationAggregates, nightAddressBeans, uniqueThreesomes);
     }
 
+    /**
+     * Обрабатывает одну строку CSV, обновляя все структуры данных
+     */
+    private void processLine(String[] line,
+                             Map<String, Integer> msisdnCounts,
+                             Map<String, SumAndAvrAggregateBean> durationAggregates,
+                             Map<String, AddressCountBean> nightAddressBeans,
+                             Map<String, ThreesomeBean> uniqueThreesomes) {
 
-    public List<SumAndAvrAggregateBean> sumValuesFromColumnDuration(Integer skipLinesAmount) {
-        Map<String, SumAndAvrAggregateBean> aggregateMap = new HashMap<>();
-        final int TARGET_COLUMN = 14; // Столбец 15 (индексация с 0)
-        final int VALUE_COLUMN = 4;   // Столбец 4 (индексация с 0)
-
-        CSVParser csvParser = new CSVParserBuilder()
-                .withSeparator(csvSeparator)
-                .build();
-
-        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
-                .withCSVParser(csvParser)
-                .withSkipLines(skipLinesAmount != null ? skipLinesAmount : 0)
-                .build()) {
-
-            String[] previousLine = null;
-            String[] currentLine;
-
-            while ((currentLine = reader.readNext()) != null) {
-                if (previousLine == null || !Arrays.equals(previousLine, currentLine)) {
-                    // Проверяем, что оба столбца существуют в текущей строке
-                    if (currentLine.length > TARGET_COLUMN && currentLine.length > VALUE_COLUMN) {
-                        String key = currentLine[TARGET_COLUMN];
-                        String valueStr = currentLine[VALUE_COLUMN];
-
-                        // Если ключ пустой или null, считаем как "пустое значение"
-                        if (key == null || key.trim().isEmpty()) {
-                            key = "(пустое значение)";
-                        }
-
-                        // Парсим значение из столбца 4 и обновляем AggregateBean
-                        if (valueStr != null && !valueStr.trim().isEmpty()) {
-                            try {
-                                int value = Integer.parseInt(valueStr.trim());
-
-                                // Получаем или создаем AggregateBean для данного ключа
-                                SumAndAvrAggregateBean bean = aggregateMap.getOrDefault(key, new SumAndAvrAggregateBean(key));
-                                bean.addValue(value);
-                                aggregateMap.put(key, bean);
-
-                            } catch (NumberFormatException e) {
-                                // Если значение не число, игнорируем или можно добавить обработку ошибок
-                                System.err.println("Некорректное числовое значение в столбце 4: " + valueStr);
-                            }
-                        }
-                    }
-                }
-                previousLine = currentLine;
-            }
-
-        } catch (IOException | CsvException e) {
-            e.printStackTrace();
+        // Обработка уникальных контактов (столбец 15)
+        if (line.length > CONTACT_PHONE_COLUMN) {
+            String msisdn = processValue(line[CONTACT_PHONE_COLUMN]);
+            msisdnCounts.merge(msisdn, 1, Integer::sum);
         }
 
-        return aggregateMap.values().stream().collect(Collectors.toList());
+        // Обработка длительности звонков (столбцы 15 и 4)
+        if (line.length > CONTACT_PHONE_COLUMN && line.length > DURATION_VALUE_COLUMN) {
+            String msisdn = processValue(line[CONTACT_PHONE_COLUMN]);
+            String durationStr = line[DURATION_VALUE_COLUMN];
+
+            processDurationData(msisdn, durationStr, durationAggregates);
+        }
+
+        // Обработка ночных базовых станций (столбцы 4 и 23)
+        if (line.length > TIME_COLUMN && line.length > ADDRESS_COLUMN) {
+            String timeValue = line[TIME_COLUMN];
+            String addressValue = line[ADDRESS_COLUMN];
+
+            processNightAddressData(timeValue, addressValue, nightAddressBeans);
+        }
+
+        // Обработка уникальных троек (столбцы 9, 10, 11)
+        if (line.length > IMEI_COLUMN) {
+            processThreesomeData(line, uniqueThreesomes);
+        }
     }
 
-    public List<AddressCountBean> getUniqueValuesFromAddressDuringNightHours(Integer skipLinesAmount) {
-        Map<String, AddressCountBean> valueCountMap = new HashMap<>();
-        final int TIME_COLUMN = 3; // Столбец 4 (индексация с 0) - время
-        final int TARGET_COLUMN = 22; // Столбец 23 (индексация с 0)
+    /**
+     * Обрабатывает данные о длительности звонков
+     */
+    private void processDurationData(String msisdn, String durationStr,
+                                     Map<String, SumAndAvrAggregateBean> durationAggregates) {
+        if (durationStr != null && !durationStr.trim().isEmpty()) {
+            try {
+                int duration = Integer.parseInt(durationStr.trim());
 
-        CSVParser csvParser = new CSVParserBuilder()
-                .withSeparator(csvSeparator)
-                .build();
+                SumAndAvrAggregateBean bean = durationAggregates.getOrDefault(msisdn,
+                        new SumAndAvrAggregateBean(msisdn));
+                bean.addValue(duration);
+                durationAggregates.put(msisdn, bean);
 
-        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
-                .withCSVParser(csvParser)
-                .withSkipLines(skipLinesAmount != null ? skipLinesAmount : 0)
-                .build()) {
-
-            String[] previousLine = null;
-            String[] currentLine;
-
-            while ((currentLine = reader.readNext()) != null) {
-                if (previousLine == null || !Arrays.equals(previousLine, currentLine)) {
-                    // Проверяем, что оба столбца существуют в текущей строке
-                    if (currentLine.length > TIME_COLUMN && currentLine.length > TARGET_COLUMN) {
-                        String timeValue = currentLine[TIME_COLUMN];
-                        String targetValue = currentLine[TARGET_COLUMN];
-
-                        // Проверяем время (с 01:00 до 05:00)
-                        if (isTimeBetween1AMAnd5AM(timeValue)) {
-                            // Обрабатываем значение из столбца 23
-                            if (targetValue != null && !targetValue.trim().isEmpty()) {
-                                String value = targetValue.trim();
-
-                                // Обновляем счетчик для данного значения
-                                AddressCountBean bean = valueCountMap.get(value);
-                                if (bean == null) {
-                                    bean = new AddressCountBean(value);
-                                    valueCountMap.put(value, bean);
-                                }
-                                bean.incrementCount();
-                            }
-                        }
-                    }
-                }
-                previousLine = currentLine;
+            } catch (NumberFormatException e) {
+                System.err.println("Некорректное числовое значение в столбце 4: " + durationStr);
             }
-
-        } catch (IOException | CsvException e) {
-            e.printStackTrace();
         }
+    }
 
-        return new ArrayList<>(valueCountMap.values());
+    /**
+     * Обрабатывает данные о ночных базовых станциях
+     */
+    private void processNightAddressData(String timeValue, String addressValue,
+                                         Map<String, AddressCountBean> nightAddressBeans) {
+        if (isTimeBetween1AMAnd5AM(timeValue)) {
+            if (addressValue != null && !addressValue.trim().isEmpty()) {
+                String address = addressValue.trim();
+
+                // Используем подход из оригинального кода
+                AddressCountBean bean = nightAddressBeans.get(address);
+                if (bean == null) {
+                    bean = new AddressCountBean(address);
+                    nightAddressBeans.put(address, bean);
+                }
+                bean.incrementCount();
+            }
+        }
+    }
+
+    /**
+     * Обрабатывает данные об уникальных тройках значений
+     */
+    private void processThreesomeData(String[] line, Map<String, ThreesomeBean> uniqueThreesomes) {
+        String msisdn = getValueOrEmpty(line[MSISDN_COLUMN]);
+        String imsi = getValueOrEmpty(line[IMSI_COLUMN]);
+        String imei = getValueOrEmpty(line[IMEI_COLUMN]);
+
+        // Создаем ключ для уникальности по всем трем значениям
+        String key = msisdn + "|" + imsi + "|" + imei;
+
+        // Если такого сочетания значений еще нет, добавляем в карту
+        if (!uniqueThreesomes.containsKey(key)) {
+            ThreesomeBean bean = new ThreesomeBean();
+            bean.setMsisdn(msisdn);
+            bean.setImsi(imsi);
+            bean.setImei(imei);
+            uniqueThreesomes.put(key, bean);
+        }
+    }
+
+    /**
+     * Собирает итоговые результаты из накопленных данных
+     */
+    private MobileAnalysisResult buildAnalysisResult(Map<String, Integer> msisdnCounts,
+                                                     Map<String, SumAndAvrAggregateBean> durationAggregates,
+                                                     Map<String, AddressCountBean> nightAddressBeans,
+                                                     Map<String, ThreesomeBean> uniqueThreesomes) {
+
+        MobileAnalysisResult result = new MobileAnalysisResult();
+
+        result.uniqueList = msisdnCounts.entrySet().stream()
+                .map(e -> new CountMsisdnAggreagateBean(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
+
+        result.durationSumList = new ArrayList<>(durationAggregates.values());
+
+        result.nightBSList = new ArrayList<>(nightAddressBeans.values());
+
+        result.threesList = new ArrayList<>(uniqueThreesomes.values());
+
+        return result;
+    }
+
+    private String processValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return "(пустое значение)";
+        }
+        return value.trim();
     }
 
     // Вспомогательный метод для проверки времени в формате "01.01.2023 15:20:18"
@@ -226,57 +253,18 @@ public class MobileConnections extends Analyzer {
         return false;
     }
 
-    public List<ThreesomeBean> getUniqueThreesome(Integer skipLinesAmount) {
-        Map<String, ThreesomeBean> uniqueMap = new HashMap<>();
-        final int MSISDN = 8;  // Столбец 9 (индексация с 0)
-        final int IMSI = 9; // Столбец 10 (индексация с 0)
-        final int IMEI = 10; // Столбец 11 (индексация с 0)
-
-        CSVParser csvParser = new CSVParserBuilder()
-                .withSeparator(csvSeparator)
-                .build();
-
-        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(new FileInputStream(filePath), csvCharset))
-                .withCSVParser(csvParser)
-                .withSkipLines(skipLinesAmount != null ? skipLinesAmount : 0)
-                .build()) {
-
-            String[] previousLine = null;
-            String[] currentLine;
-
-            while ((currentLine = reader.readNext()) != null) {
-                if (previousLine == null || !Arrays.equals(previousLine, currentLine)) {
-                    // Проверяем, что все три столбца существуют в текущей строке
-                    if (currentLine.length > IMEI) {
-                        String value9 = getValueOrEmpty(currentLine[MSISDN]);
-                        String value10 = getValueOrEmpty(currentLine[IMSI]);
-                        String value11 = getValueOrEmpty(currentLine[IMEI]);
-
-                        // Создаем ключ для уникальности по всем трем значениям
-                        String key = value9 + "|" + value10 + "|" + value11;
-
-                        // Если такого сочетания значений еще нет, добавляем в карту
-                        if (!uniqueMap.containsKey(key)) {
-                            ThreesomeBean bean = new ThreesomeBean();
-                            bean.setMsisdn(value9);
-                            bean.setImsi(value10);
-                            bean.setImei(value11);
-                            uniqueMap.put(key, bean);
-                        }
-                    }
-                }
-                previousLine = currentLine;
-            }
-
-        } catch (IOException | CsvException e) {
-            e.printStackTrace();
-        }
-
-        return new ArrayList<>(uniqueMap.values());
-    }
-
     // Вспомогательный метод для обработки пустых значений
     private String getValueOrEmpty(String value) {
         return (value == null || value.trim().isEmpty()) ? "(пустое значение)" : value.trim();
+    }
+
+    /**
+     * Внутренний класс для хранения результатов анализа мобильных соединений
+     */
+    private static class MobileAnalysisResult {
+        List<CountMsisdnAggreagateBean> uniqueList;
+        List<SumAndAvrAggregateBean> durationSumList;
+        List<AddressCountBean> nightBSList;
+        List<ThreesomeBean> threesList;
     }
 }
