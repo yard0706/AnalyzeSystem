@@ -5,11 +5,13 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvException;
+import org.apache.commons.lang3.StringUtils;
 import ru.vrn.rt.analyzesystem.anlyze.excel.beans.AddressCountBean;
 import ru.vrn.rt.analyzesystem.anlyze.excel.beans.ThreesomeBean;
 import ru.vrn.rt.analyzesystem.anlyze.excel.beans.CountMsisdnAggreagateBean;
 import ru.vrn.rt.analyzesystem.anlyze.excel.beans.SumAndAvrAggregateBean;
 import ru.vrn.rt.analyzesystem.anlyze.excel.ExcelExporter;
+import ru.vrn.rt.analyzesystem.persistence.service.TacService;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -28,10 +30,13 @@ public class MobileConnections extends Analyzer {
     private static final int IMSI_COLUMN = 9;
     private static final int IMEI_COLUMN = 10;
 
-    public MobileConnections(String filePath, String csvCharset, Character csvSeparator) {
+    protected TacService tacService;
+
+    public MobileConnections(String filePath, String csvCharset, Character csvSeparator, TacService tacService) {
         this.filePath = filePath;
         this.csvCharset = csvCharset;
         this.csvSeparator = csvSeparator;
+        this.tacService = tacService;
     }
 
     public String getFilePath() {
@@ -194,6 +199,7 @@ public class MobileConnections extends Analyzer {
             bean.setMsisdn(msisdn);
             bean.setImsi(imsi);
             bean.setImei(imei);
+            bean.setDevice(tacService.getDescriptionByTac(StringUtils.substring(imei,0,8)));
             uniqueThreesomes.put(key, bean);
         }
     }

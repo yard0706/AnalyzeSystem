@@ -9,6 +9,9 @@ public class ThreesomeBean {
     private String imsi;
     @ExcelColumn(name = "imei", order = 3)
     private String imei;
+    @ExcelColumn(name = "device", order = 4)
+    private String device;
+
 
     // Конструкторы
     public ThreesomeBean() {}
@@ -44,12 +47,21 @@ public class ThreesomeBean {
         this.imei = imei;
     }
 
+    public String getDevice() {
+        return device;
+    }
+
+    public void setDevice(String device) {
+        this.device = device;
+    }
+
     @Override
     public String toString() {
-        return "Column9_10_11_Bean{" +
-                "column9Value='" + msisdn + '\'' +
-                ", column10Value='" + imsi + '\'' +
-                ", column11Value='" + imei + '\'' +
+        return "ThreesomeBean{" +
+                "msisdn='" + msisdn + '\'' +
+                ", imsi='" + imsi + '\'' +
+                ", imei='" + imei + '\'' +
+                ", device='" + device + '\'' +
                 '}';
     }
 }

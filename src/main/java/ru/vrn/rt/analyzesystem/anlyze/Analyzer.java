@@ -1,5 +1,7 @@
 package ru.vrn.rt.analyzesystem.anlyze;
 
+import ru.vrn.rt.analyzesystem.persistence.service.TacService;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -7,6 +9,7 @@ public abstract class Analyzer {
     protected String filePath;
     protected String csvCharset;
     protected Character csvSeparator;
+    protected TacService tacService;
 
     public abstract String analyze();
 

@@ -13,10 +13,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.primefaces.PrimeFaces;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.vrn.rt.analyzesystem.anlyze.InternetNoDecodeConnections;
 import ru.vrn.rt.analyzesystem.anlyze.MobileConnections;
 import ru.vrn.rt.analyzesystem.filereader.csv.CsvDataExtractor;
+import ru.vrn.rt.analyzesystem.persistence.service.TacService;
 import ru.vrn.rt.analyzesystem.view.constants.AnalyzeConstant;
 import ru.vrn.rt.analyzesystem.view.model.ColumnModel;
 
@@ -37,6 +39,8 @@ public class DataViewBean {
     private String filePath;
     private String separatorChar;
     private String encoding = "CP1251";
+    @Autowired
+    private TacService tacService;
 
     @PostConstruct
     public void postConstructInit() {
@@ -170,7 +174,7 @@ public class DataViewBean {
 
     private String analyzeWithConcretePattern(String analyzeResultXlsxFileName) {
         if (selectedFilesPattern.equals(AnalyzeConstant.MOBILE_CONNECTIONS))
-            analyzeResultXlsxFileName = ( new MobileConnections(filePath, encoding, separatorChar.charAt(0)) ).analyze();
+            analyzeResultXlsxFileName = ( new MobileConnections(filePath, encoding, separatorChar.charAt(0), tacService) ).analyze();
         if (selectedFilesPattern.equals(AnalyzeConstant.INTERNET_NODECODE))
             analyzeResultXlsxFileName = ( new InternetNoDecodeConnections(filePath, encoding, separatorChar.charAt(0)) ).analyze();
 
