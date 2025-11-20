@@ -5,6 +5,7 @@ import ru.vrn.rt.analyzesystem.persistence.entity.Tac;
 import ru.vrn.rt.analyzesystem.persistence.repository.TacRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TacService {
@@ -15,8 +16,11 @@ public class TacService {
     }
 
     public String getDescriptionByTac(String tac) {
-        List<Tac> resultList = tacRepository.findDescriptionByTac(tac);
-        if(resultList == null || resultList.size()==0) return "(нет данных)";
-        return resultList.get(0).getDescription();
+        return Optional.ofNullable(tacRepository.findDescriptionByTac(tac))
+                .stream()
+                .flatMap(List::stream)
+                .findFirst()
+                .map(Tac::getDescription)
+                .orElse("(нет данных)");
     }
 }
