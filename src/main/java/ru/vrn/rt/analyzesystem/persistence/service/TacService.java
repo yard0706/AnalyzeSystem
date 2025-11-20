@@ -23,4 +23,8 @@ public class TacService {
                 .map(Tac::getDescription)
                 .orElse("(нет данных)");
     }
+
+    public void save(Tac tac) {
+        tacRepository.saveIfUniqueOptional(tac);
+    }
 }

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import ru.vrn.rt.analyzesystem.anlyze.InternetNoDecodeConnections;
 import ru.vrn.rt.analyzesystem.anlyze.MobileConnections;
 import ru.vrn.rt.analyzesystem.filereader.csv.CsvDataExtractor;
+import ru.vrn.rt.analyzesystem.load.TacsLoader;
 import ru.vrn.rt.analyzesystem.persistence.service.TacService;
 import ru.vrn.rt.analyzesystem.view.constants.AnalyzeConstant;
 import ru.vrn.rt.analyzesystem.view.model.ColumnModel;
@@ -173,6 +174,10 @@ public class DataViewBean {
     }
 
     private String analyzeWithConcretePattern(String analyzeResultXlsxFileName) {
+        if (filePath.toLowerCase().endsWith("taci.txt")) {
+            new TacsLoader(filePath, tacService).loadToDb();
+            sendMessage("Обработан:", filePath);
+        }
         if (selectedFilesPattern.equals(AnalyzeConstant.MOBILE_CONNECTIONS))
             analyzeResultXlsxFileName = ( new MobileConnections(filePath, encoding, separatorChar.charAt(0), tacService) ).analyze();
         if (selectedFilesPattern.equals(AnalyzeConstant.INTERNET_NODECODE))
