@@ -4,4 +4,5 @@ public class AnalyzeConstant {
     public static final String MOBILE_CONNECTIONS = "Мобильная связь";
     public static final String LOCATION = "Местоположение";
     public static final String INTERNET_NODECODE = "Интернет";
+    public static final String TACS_FILE = "Файл с TAC-кодами";
 }

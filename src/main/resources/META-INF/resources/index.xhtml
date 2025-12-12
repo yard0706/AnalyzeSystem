@@ -116,12 +116,27 @@
                                         process="@this"/>
                             </p:selectOneMenu>
 
+                            <p:commandButton id="loadTacsToDbButton" value="Загрузить" icon="pi pi-chart-bar"
+                                             styleClass="ui-button-outlined" style="margin-left: 20px;"
+                                             action="#{dataViewBean.loadTacsToDb}"
+                                             update=":sidebarForm:msgs :contentForm"
+                                             rendered="#{dataViewBean.shouldRenderLoadTacsToDbButton}">
+                            </p:commandButton>
+
+                            <p:outputLabel id="loadTacsToDbResultLabel"
+                                    value="#{dataViewBean.loadTacsToDbResult}"
+                                    style="font-weight: bold; color: blue;"
+                                    rendered="#{dataViewBean.shouldRenderLoadTacsToDbButton}"/>
+
                             <p:commandButton id="analyzeReportButton" value="Аналитика" icon="pi pi-chart-bar"
                                              styleClass="ui-button-outlined" style="margin-left: 20px;"
                                              action="#{dataViewBean.analyzeFile}"
                                              oncomplete="document.getElementById('contentForm:uploadAnalyzeReportButton').click();"
-                                             update=":sidebarForm:msgs :contentForm">
+                                             update=":sidebarForm:msgs :contentForm"
+                                             rendered="#{dataViewBean.shouldRenderAnalyzeReportButton}">
                             </p:commandButton>
+
+
 
                             <p:commandButton id="uploadAnalyzeReportButton" value="Аналитика" style="margin-left: 20px; display: none;"
                                              update=":sidebarForm:msgs :contentForm">

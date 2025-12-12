@@ -90,10 +90,11 @@ public class InternetNoDecodeConnections extends Analyzer {
         return xlsxFilePath;
     }
 
-    public InternetNoDecodeConnections(String filePath, String csvCharset, Character csvSeparator) {
+    public InternetNoDecodeConnections(String filePath, String csvCharset, Character csvSeparator, String geoLiteDbPath) {
         this.filePath = filePath;
         this.csvCharset = csvCharset;
         this.csvSeparator = csvSeparator;
+        this.geoLiteDbPath = geoLiteDbPath;
     }
 
     /**
@@ -283,8 +284,7 @@ public class InternetNoDecodeConnections extends Analyzer {
 
     private GeoIPLookup initializeGeoIPLookup() {
         try {
-            String databasePath = new ClassPathResource("GeoLite2-City.mmdb").getFile().getAbsolutePath();
-            return new GeoIPLookup(databasePath);
+            return new GeoIPLookup(geoLiteDbPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

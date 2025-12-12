@@ -24,7 +24,7 @@ public class TacService {
                 .orElse("(нет данных)");
     }
 
-    public void save(Tac tac) {
-        tacRepository.saveIfUniqueOptional(tac);
+    public Optional<Tac> save(Tac tac) {
+        return tacRepository.saveIfUniqueOptional(tac);
     }
 }

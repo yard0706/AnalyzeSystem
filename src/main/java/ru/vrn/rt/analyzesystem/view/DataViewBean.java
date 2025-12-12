@@ -14,6 +14,8 @@ import org.primefaces.PrimeFaces;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.converter.json.GsonBuilderUtils;
 import org.springframework.stereotype.Component;
 import ru.vrn.rt.analyzesystem.anlyze.InternetNoDecodeConnections;
 import ru.vrn.rt.analyzesystem.anlyze.MobileConnections;
@@ -43,11 +45,17 @@ public class DataViewBean {
     @Autowired
     private TacService tacService;
 
+    @Value("${geolite.file}")
+    private String geoLiteDbPath;
+
+    private String loadTacsToDbResult = "";
+
     @PostConstruct
     public void postConstructInit() {
         filesPatternsMap = new HashMap<>() {{
            put(AnalyzeConstant.MOBILE_CONNECTIONS, new LinkedList<Integer>() {{add(3);add(4);add(8);add(14);}});
            put(AnalyzeConstant.LOCATION, new LinkedList<Integer>() {{add(2);add(3);add(9);}});
+           put(AnalyzeConstant.TACS_FILE, new LinkedList<Integer>() {{add(-1);}});
            put(AnalyzeConstant.INTERNET_NODECODE, new LinkedList<Integer>() {{add(-1);}}); // -1 вывести все колонки как есть
         }};
 
@@ -68,6 +76,7 @@ public class DataViewBean {
                 put(4,"Ид.точки подключения");
                 put(5,"IP-адрес/порт клиента");}});
         }};
+
         filesPatterns.addAll(filesPatternsMap.keySet());
     }
 
@@ -119,6 +128,8 @@ public class DataViewBean {
                 // Если все проверки пройдены, возвращаем тип файла
                 if (matches) {
                     return fileType;
+                } else if(filePath.contains("TACi")) {
+                    return AnalyzeConstant.TACS_FILE;
                 }
             }
 
@@ -131,6 +142,7 @@ public class DataViewBean {
     }
 
     private String analyzeResultXlsxFileName = null;
+
     public void analyzeFile() {
         System.out.println("getAnalyzedFile start");
         if (filePath==null) {
@@ -173,15 +185,34 @@ public class DataViewBean {
                 .build();
     }
 
-    private String analyzeWithConcretePattern(String analyzeResultXlsxFileName) {
-        if (filePath.toLowerCase().endsWith("taci.txt")) {
-            new TacsLoader(filePath, tacService).loadToDb();
+    public void loadTacsToDb() {
+        if (filePath.toLowerCase().contains("taci")) {
+            Map<String, Integer> loadResult = new TacsLoader(filePath, tacService).loadToDb();
             sendMessage("Обработан:", filePath);
+            loadTacsToDbResult = "Загружено:"+loadResult.get("saved")+"; Уже есть:"+loadResult.get("existing");
         }
+    }
+
+    public boolean isShouldRenderAnalyzeReportButton()
+    {
+        if (selectedFilesPattern == null) return false;
+        if (!selectedFilesPattern.equals(AnalyzeConstant.TACS_FILE)) return true;
+        return false;
+    }
+
+    public boolean isShouldRenderLoadTacsToDbButton()
+    {
+        if (selectedFilesPattern == null) return false;
+        if (selectedFilesPattern.equals(AnalyzeConstant.TACS_FILE)) return true;
+        return false;
+    }
+
+    private String analyzeWithConcretePattern(String analyzeResultXlsxFileName) {
+
         if (selectedFilesPattern.equals(AnalyzeConstant.MOBILE_CONNECTIONS))
             analyzeResultXlsxFileName = ( new MobileConnections(filePath, encoding, separatorChar.charAt(0), tacService) ).analyze();
         if (selectedFilesPattern.equals(AnalyzeConstant.INTERNET_NODECODE))
-            analyzeResultXlsxFileName = ( new InternetNoDecodeConnections(filePath, encoding, separatorChar.charAt(0)) ).analyze();
+            analyzeResultXlsxFileName = ( new InternetNoDecodeConnections(filePath, encoding, separatorChar.charAt(0), geoLiteDbPath) ).analyze();
 
         if (analyzeResultXlsxFileName ==null) {
             return null;
@@ -255,5 +286,29 @@ public class DataViewBean {
 
     public void autoSelectFilePattern() {
         selectedFilesPattern = getFileTypeByFirstLine(0);
+    }
+
+    public String getGeoLiteDbPath() {
+        return geoLiteDbPath;
+    }
+
+    public void setGeoLiteDbPath(String geoLiteDbPath) {
+        this.geoLiteDbPath = geoLiteDbPath;
+    }
+
+    public String getLoadTacsToDbResult() {
+        return loadTacsToDbResult;
+    }
+
+    public void setLoadTacsToDbResult(String loadTacsToDbResult) {
+        this.loadTacsToDbResult = loadTacsToDbResult;
+    }
+
+    public String getAnalyzeResultXlsxFileName() {
+        return analyzeResultXlsxFileName;
+    }
+
+    public void setAnalyzeResultXlsxFileName(String analyzeResultXlsxFileName) {
+        this.analyzeResultXlsxFileName = analyzeResultXlsxFileName;
     }
 }

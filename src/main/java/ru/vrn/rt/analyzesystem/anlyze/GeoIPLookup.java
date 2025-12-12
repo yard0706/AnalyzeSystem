@@ -6,8 +6,10 @@ import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.record.*;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -15,10 +17,9 @@ import java.net.UnknownHostException;
 public class GeoIPLookup {
     private DatabaseReader dbReader;
 
-    public GeoIPLookup(String databasePath) throws IOException {
+    public GeoIPLookup(String geoLiteDbPath) throws IOException {
         // Загрузка базы данных GeoIP2
-        File database = new File(databasePath);
-        dbReader = new DatabaseReader.Builder(database).build();
+        dbReader = new DatabaseReader.Builder(new FileInputStream(geoLiteDbPath)).build();
     }
 
     public String lookupIP(String ipAddress) {

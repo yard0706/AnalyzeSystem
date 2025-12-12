@@ -10,6 +10,7 @@ public abstract class Analyzer {
     protected String csvCharset;
     protected Character csvSeparator;
     protected TacService tacService;
+    protected String geoLiteDbPath;
 
     public abstract String analyze();
 

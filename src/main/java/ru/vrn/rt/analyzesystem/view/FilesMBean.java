@@ -158,6 +158,8 @@ public class FilesMBean {
 
         dataViewBean.setFilePath(selectedFile.getFilePath());
         dataViewBean.setSeparatorChar(separatorChar);
+        dataViewBean.setLoadTacsToDbResult("");
+        dataViewBean.setAnalyzeResultXlsxFileName(null);
         dataViewBean.autoSelectFilePattern();
         dataViewBean.init();
         PrimeFaces.current().ajax().update(":contentForm:fileDataTable");
