@@ -35,10 +35,39 @@ public class ExcelExporter {
      * @param <T> тип объектов в коллекции
      */
     public static <T> void exportToExcel(Collection<T> collection, String filePath, String sheetName, boolean overwriteSheet) {
+        // Если коллекция null или пустая, просто не создаем лист
         if (collection == null || collection.isEmpty()) {
-            throw new IllegalArgumentException("Коллекция не может быть пустой");
+            // Просто сохраняем файл в текущем состоянии (без создания листа)
+            try {
+                File file = new File(filePath);
+                Workbook workbook;
+
+                if (file.exists()) {
+                    // Если файл существует, открываем его
+                    try (FileInputStream inputStream = new FileInputStream(file)) {
+                        workbook = new XSSFWorkbook(inputStream);
+                    }
+                } else {
+                    // Если файла нет, создаем новый пустой файл
+                    workbook = new XSSFWorkbook();
+                }
+
+                // Сохраняем файл без создания листа с заданным именем
+                try (FileOutputStream outputStream = new FileOutputStream(filePath)) {
+                    workbook.write(outputStream);
+                }
+
+                workbook.close();
+                System.out.println("Коллекция " + (collection == null ? "null" : "пустая") +
+                        ". Файл сохранен без создания/изменения листа '" + sheetName + "': " + filePath);
+                return;
+
+            } catch (IOException e) {
+                throw new RuntimeException("Ошибка при сохранении Excel файла", e);
+            }
         }
 
+        // Если коллекция не пустая, выполняем полную логику экспорта
         File file = new File(filePath);
         Workbook workbook;
 
@@ -53,7 +82,7 @@ public class ExcelExporter {
                 workbook = new XSSFWorkbook();
             }
 
-            // Работа с листом
+            // Работа с листом (только если коллекция не пустая)
             Sheet sheet;
             if (workbook.getSheet(sheetName) != null) {
                 if (overwriteSheet) {
